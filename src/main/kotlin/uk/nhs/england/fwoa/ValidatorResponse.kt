@@ -1,4 +1,4 @@
-package uk.nhs.england.fhir.fwoa
+package uk.nhs.england.fwoa
 
 import lombok.Builder
 import lombok.Value

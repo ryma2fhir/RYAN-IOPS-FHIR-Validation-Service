@@ -1,0 +1,11 @@
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 300
+      MemorySize: 2048
+      Handler: uk.nhs.england.fwoa.Handler
+      CodeUri: /Users/kevinmayfield/github/nhsdigital/fhir-validation-lambda
+      Runtime: java11
+      Architectures:
+        - x86_64

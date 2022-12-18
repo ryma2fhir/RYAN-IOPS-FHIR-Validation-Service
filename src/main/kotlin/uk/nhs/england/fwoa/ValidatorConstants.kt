@@ -1,4 +1,4 @@
-package uk.nhs.england.fhir.fwoa
+package uk.nhs.england.fwoa
 
 object ValidatorConstants {
     const val DEFAULT_IMPLEMENTATION_GUIDES_FOLDER = "implementationGuides"

@@ -120,10 +120,10 @@
             <artifactId>hapi-fhir-validation-resources-r4</artifactId>
             <version>${fhir.version}</version>
         </dependency>
-        <dependency>
+       <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.24</version>
+            <version>1.18.16</version>
             <scope>provided</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-lambda-java-core -->
@@ -132,11 +132,11 @@
             <artifactId>aws-lambda-java-core</artifactId>
             <version>1.2.2</version>
         </dependency>
-        <dependency>
+       <!-- <dependency>
             <groupId>io.github.classgraph</groupId>
             <artifactId>classgraph</artifactId>
-            <version>4.8.152</version>
-        </dependency>
+            <version>4.8.102</version>
+        </dependency> -->
     </dependencies>
 
 </project>

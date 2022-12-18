@@ -1,4 +1,4 @@
-package uk.nhs.england.fhir.fwoa
+package uk.nhs.england.fwoa
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
@@ -7,7 +7,7 @@ import mu.KLogging
 class Handler : RequestHandler<String, ValidatorResponse> {
 
     companion object : KLogging()
-    private var validator: Validator? = null
+    private var validator :Validator? = null
 
     init {
         logger.info("Creating the Validator instance for the first time...")
