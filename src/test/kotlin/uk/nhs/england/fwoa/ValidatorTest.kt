@@ -10,13 +10,14 @@ class ValidatorTest {
     var validator: Validator? = null
     var validatorStu3: Validator? = null
 
+  /*
     @BeforeAll
     fun setup() {
         // Creating the HAPI validator takes several seconds. It's ok to reuse the same validator across tests to speed up tests
         validator = Validator(ValidatorConstants.FHIR_R4, null)
         validatorStu3 = Validator(ValidatorConstants.FHIR_STU3, null)
     }
-
+*/
     @Test
     fun simple_patient() {
         val resourceText =

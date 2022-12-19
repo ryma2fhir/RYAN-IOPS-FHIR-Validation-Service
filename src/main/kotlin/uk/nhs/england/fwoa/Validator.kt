@@ -2,14 +2,23 @@ package uk.nhs.england.fwoa
 
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport
+import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException
 import ca.uhn.fhir.validation.FhirValidator
-
+import ca.uhn.fhir.validation.SingleValidationMessage
+import ca.uhn.fhir.validation.ValidationResult
+import com.google.gson.JsonSyntaxException
 import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService
 import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport
 import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
 import org.hl7.fhir.instance.model.api.IBaseResource
+import java.util.function.Function
+import java.util.stream.Collectors
+
+
+
+
 
 class Validator(var fhirVersion: String, var implementationGuidesFolder: String?) {
 
@@ -74,8 +83,73 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
         return PrePopulatedValidationSupport(ctx, myStructureDefinitions, myValueSets, myCodeSystems)
     }
 
+    private fun toValidatorResponse(result: ValidationResult): ValidatorResponse? {
+        return ValidatorResponse.builder()
+            .isSuccessful(result.isSuccessful)
+            .errorMessages(
+                result.messages.stream()
+                    .map(Function<SingleValidationMessage, Any> { singleValidationMessage: SingleValidationMessage ->
+                        ValidatorErrorMessage.builder()
+                            .severity(singleValidationMessage.severity.code)
+                            .msg(singleValidationMessage.locationString + " - " + singleValidationMessage.message)
+                            .build()
+                    })
+                    .collect(Collectors.toList())
+            )
+            .build()
+    }
     fun validate(resource: String?) : ValidatorResponse{
-        var response = ValidatorResponse(true)
-        return response;
+        return try {
+            val result: ValidationResult = fhirValidator.validateWithResult(resource)
+            toValidatorResponse(result)
+        } catch (e: JsonSyntaxException) {
+            ValidatorResponse(isSuccessful = false)
+                .isSuccessful(false)
+                .errorMessages(
+                    ImmutableList.of(
+                        ValidatorErrorMessage.builder()
+                            .msg("Invalid JSON")
+                            .severity("error")
+                            .build()
+                    )
+                )
+                .build()
+        } catch (e: NullPointerException) {
+            ValidatorResponse.builder()
+                .isSuccessful(false)
+                .errorMessages(
+                    ImmutableList.of(
+                        ValidatorErrorMessage.builder()
+                            .msg("Invalid JSON")
+                            .severity("error")
+                            .build()
+                    )
+                )
+                .build()
+        } catch (e: IllegalArgumentException) {
+            ValidatorResponse.builder()
+                .isSuccessful(false)
+                .errorMessages(
+                    ImmutableList.of(
+                        ValidatorErrorMessage.builder()
+                            .msg("Invalid JSON")
+                            .severity("error")
+                            .build()
+                    )
+                )
+                .build()
+        } catch (e: InvalidRequestException) {
+            ValidatorResponse.builder()
+                .isSuccessful(false)
+                .errorMessages(
+                    ImmutableList.of(
+                        ValidatorErrorMessage.builder()
+                            .msg("Invalid JSON")
+                            .severity("error")
+                            .build()
+                    )
+                )
+                .build()
+        }
     }
 }
