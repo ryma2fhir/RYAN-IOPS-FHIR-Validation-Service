@@ -3,7 +3,7 @@ package uk.nhs.england.fwoa
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport
 import ca.uhn.fhir.validation.FhirValidator
-import mu.KLogging
+
 import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService
 import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport
 import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport
@@ -12,7 +12,7 @@ import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
 import org.hl7.fhir.instance.model.api.IBaseResource
 
 class Validator(var fhirVersion: String, var implementationGuidesFolder: String?) {
-    companion object : KLogging()
+
     var ctx : FhirContext
     var fhirValidator : FhirValidator
     init {
@@ -74,7 +74,8 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
         return PrePopulatedValidationSupport(ctx, myStructureDefinitions, myValueSets, myCodeSystems)
     }
 
-    fun validate(resource: String?) : ValidatorResponse? {
-        return null;
+    fun validate(resource: String?) : ValidatorResponse{
+        var response = ValidatorResponse(true)
+        return response;
     }
 }
