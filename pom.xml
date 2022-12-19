@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>consoleApp</name>
+    <name>fwoa-hapi-validator</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -28,6 +28,23 @@
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+        <resources>
+            <!-- Copy the implementation guides packages from resources folder -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>implementationGuides/*/*.json</include>
+                    <include>log4j2.xml</include>
+                </includes>
+            </resource>
+            <!-- Copy the implementation guides packages from parent folder -->
+            <resource>
+                <directory>..</directory>
+                <includes>
+                    <include>implementationGuides/*/*.json</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -119,12 +136,6 @@
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-validation-resources-r4</artifactId>
             <version>${fhir.version}</version>
-        </dependency>
-       <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.16</version>
-            <scope>provided</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-lambda-java-core -->
         <dependency>
