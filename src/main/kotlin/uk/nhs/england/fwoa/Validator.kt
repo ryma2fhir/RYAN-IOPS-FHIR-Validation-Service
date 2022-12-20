@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException
 import ca.uhn.fhir.validation.FhirValidator
 import ca.uhn.fhir.validation.SingleValidationMessage
 import ca.uhn.fhir.validation.ValidationResult
+import com.google.common.collect.ImmutableList
 import com.google.gson.JsonSyntaxException
 import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService
 import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport
@@ -83,73 +84,66 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
         return PrePopulatedValidationSupport(ctx, myStructureDefinitions, myValueSets, myCodeSystems)
     }
 
-    private fun toValidatorResponse(result: ValidationResult): ValidatorResponse? {
-        return ValidatorResponse.builder()
-            .isSuccessful(result.isSuccessful)
-            .errorMessages(
-                result.messages.stream()
-                    .map(Function<SingleValidationMessage, Any> { singleValidationMessage: SingleValidationMessage ->
-                        ValidatorErrorMessage.builder()
-                            .severity(singleValidationMessage.severity.code)
-                            .msg(singleValidationMessage.locationString + " - " + singleValidationMessage.message)
-                            .build()
-                    })
-                    .collect(Collectors.toList())
-            )
-            .build()
+    private fun toValidatorResponse(result: ValidationResult): ValidatorResponse {
+        var validatorResponse = ValidatorResponse(isSuccessful = result.isSuccessful)
+        validatorResponse.errorMessages =
+            result.messages.stream()
+                .map(Function<SingleValidationMessage, Any> { singleValidationMessage: SingleValidationMessage ->
+                    var errorMessage = ValidatorErrorMessage()
+                    errorMessage.severity = singleValidationMessage.severity.code
+                    errorMessage.msg = singleValidationMessage.locationString + " - " + singleValidationMessage.message
+                    errorMessage
+
+                }).collect(Collectors.toList()) as List<ValidatorErrorMessage>?
+
+        return validatorResponse
     }
+
     fun validate(resource: String?) : ValidatorResponse{
         return try {
             val result: ValidationResult = fhirValidator.validateWithResult(resource)
             toValidatorResponse(result)
         } catch (e: JsonSyntaxException) {
-            ValidatorResponse(isSuccessful = false)
-                .isSuccessful(false)
-                .errorMessages(
+
+            var validatorResponse = ValidatorResponse(isSuccessful = false)
+            val msg = ValidatorErrorMessage()
+            msg.msg ="Invalid JSON"
+            msg.severity = "error"
+            validatorResponse.errorMessages =
                     ImmutableList.of(
-                        ValidatorErrorMessage.builder()
-                            .msg("Invalid JSON")
-                            .severity("error")
-                            .build()
+                        msg
                     )
-                )
-                .build()
+            validatorResponse
         } catch (e: NullPointerException) {
-            ValidatorResponse.builder()
-                .isSuccessful(false)
-                .errorMessages(
-                    ImmutableList.of(
-                        ValidatorErrorMessage.builder()
-                            .msg("Invalid JSON")
-                            .severity("error")
-                            .build()
-                    )
+            var validatorResponse = ValidatorResponse(isSuccessful = false)
+            val msg = ValidatorErrorMessage()
+            msg.msg ="Invalid JSON"
+            msg.severity = "error"
+            validatorResponse.errorMessages =
+                ImmutableList.of(
+                    msg
                 )
-                .build()
+            validatorResponse
         } catch (e: IllegalArgumentException) {
-            ValidatorResponse.builder()
-                .isSuccessful(false)
-                .errorMessages(
-                    ImmutableList.of(
-                        ValidatorErrorMessage.builder()
-                            .msg("Invalid JSON")
-                            .severity("error")
-                            .build()
-                    )
+            var validatorResponse = ValidatorResponse(isSuccessful = false)
+            val msg = ValidatorErrorMessage()
+            msg.msg ="Invalid JSON"
+            msg.severity = "error"
+            validatorResponse.errorMessages =
+                ImmutableList.of(
+                    msg
                 )
-                .build()
+            validatorResponse
         } catch (e: InvalidRequestException) {
-            ValidatorResponse.builder()
-                .isSuccessful(false)
-                .errorMessages(
-                    ImmutableList.of(
-                        ValidatorErrorMessage.builder()
-                            .msg("Invalid JSON")
-                            .severity("error")
-                            .build()
-                    )
+            var validatorResponse = ValidatorResponse(isSuccessful = false)
+            val msg = ValidatorErrorMessage()
+            msg.msg ="Invalid JSON"
+            msg.severity = "error"
+            validatorResponse.errorMessages =
+                ImmutableList.of(
+                    msg
                 )
-                .build()
+            validatorResponse
         }
     }
 }
