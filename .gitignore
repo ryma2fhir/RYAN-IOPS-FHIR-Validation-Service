@@ -2,6 +2,7 @@ HELP.md
 target/
 src/main/resources/validation.json
 src/main/resources/nhs-validation.json
+src/main/resources/implementationGuides/*.tgz
 src/uk.nhsdigital.fhir.fwoa.main/resources/*.tgz
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
