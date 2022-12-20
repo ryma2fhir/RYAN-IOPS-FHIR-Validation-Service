@@ -2,6 +2,8 @@ package uk.nhs.england.fwoa
 
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport
+import ca.uhn.fhir.context.support.IValidationSupport
+import ca.uhn.fhir.context.support.ValidationSupportContext
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException
 import ca.uhn.fhir.validation.FhirValidator
 import ca.uhn.fhir.validation.SingleValidationMessage
@@ -16,9 +18,12 @@ import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
 import org.hl7.fhir.instance.model.api.IBaseResource
+import org.hl7.fhir.r4.model.StructureDefinition
 import org.hl7.fhir.utilities.npm.NpmPackage
 import java.io.ByteArrayInputStream
 import java.io.InputStream
+import java.time.Duration
+import java.time.Instant
 import java.util.function.Function
 import java.util.stream.Collectors
 
@@ -71,6 +76,7 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
 
         loadIgs(ctx,supportChain)
 
+        generateSnapshots(supportChain)
 
         // Create a validator using the FhirInstanceValidator module.
 
@@ -94,6 +100,70 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
                     }
                 }
         }
+    }
+
+    fun generateSnapshots(supportChain: IValidationSupport) {
+        val structureDefinitions = supportChain.fetchAllStructureDefinitions<StructureDefinition>() ?: return
+        val context = ValidationSupportContext(supportChain)
+        structureDefinitions
+            .filter { shouldGenerateSnapshot(it) }
+            .forEach {
+                try {
+                    circularReferenceCheck(it,supportChain)
+                } catch (e: Exception) {
+
+                }
+            }
+
+        structureDefinitions
+            .filter { shouldGenerateSnapshot(it) }
+            .forEach {
+                try {
+                    val start: Instant = Instant.now()
+                    supportChain.generateSnapshot(context, it, it.url, "https://fhir.nhs.uk/R4", it.name)
+                    val end: Instant = Instant.now()
+                    val duration: Duration = Duration.between(start, end)
+
+                } catch (e: Exception) {
+
+                }
+            }
+    }
+
+    private fun shouldGenerateSnapshot(structureDefinition: StructureDefinition): Boolean {
+        return !structureDefinition.hasSnapshot() && structureDefinition.derivation == StructureDefinition.TypeDerivationRule.CONSTRAINT
+    }
+
+    private fun circularReferenceCheck(structureDefinition: StructureDefinition, supportChain: IValidationSupport): StructureDefinition {
+
+        structureDefinition.differential.element.forEach{
+            //   ||
+            if ((
+                        it.id.endsWith(".partOf") ||
+                                it.id.endsWith(".basedOn") ||
+                                it.id.endsWith(".replaces") ||
+                                it.id.contains("Condition.stage.assessment") ||
+                                it.id.contains("Observation.derivedFrom") ||
+                                it.id.contains("Observation.hasMember") ||
+                                it.id.contains("CareTeam.encounter") ||
+                                it.id.contains("CareTeam.reasonReference") ||
+                                it.id.contains("ServiceRequest.encounter") ||
+                                it.id.contains("ServiceRequest.reasonReference") ||
+                                it.id.contains("EpisodeOfCare.diagnosis.condition") ||
+                                it.id.contains("Encounter.diagnosis.condition") ||
+                                it.id.contains("Encounter.reasonReference")
+                        )
+                && it.hasType()) {
+
+                it.type.forEach{
+                    if (it.hasTargetProfile())
+                        it.targetProfile.forEach {
+                            it.value = getBase(it.value, supportChain);
+                        }
+                }
+            }
+        }
+        return structureDefinition
     }
 
     private fun toValidatorResponse(result: ValidationResult): ValidatorResponse {
@@ -185,6 +255,17 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
                 //  cnt++
                 jsonParser.parseResource(it)
             }
+    }
+
+    private fun getBase(profile : String,supportChain: IValidationSupport): String? {
+        val structureDefinition : StructureDefinition=
+            supportChain.fetchStructureDefinition(profile) as StructureDefinition;
+        if (structureDefinition.hasBaseDefinition()) {
+            var baseProfile = structureDefinition.baseDefinition
+            if (baseProfile.contains(".uk")) baseProfile = getBase(baseProfile, supportChain)
+            return baseProfile
+        }
+        return null;
     }
 
     open fun getPackages(content : ByteArray) : NpmPackage  {
