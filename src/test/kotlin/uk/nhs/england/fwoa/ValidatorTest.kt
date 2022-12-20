@@ -2,11 +2,11 @@ package uk.nhs.england.fwoa
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
+import com.google.common.collect.ImmutableList
 import org.junit.jupiter.api.Test
 
 class ValidatorTest {
-    val INVALID_JSON_VALIDATOR_RESPONSE = null
+    val INVALID_JSON_VALIDATOR_RESPONSE = getInvalidResponse().toJson()
     var validator: Validator? = Validator(ValidatorConstants.FHIR_R4, null)
     var validatorStu3: Validator? = null
 
@@ -18,6 +18,18 @@ class ValidatorTest {
         validatorStu3 = Validator(ValidatorConstants.FHIR_STU3, null)
     }
 */
+    fun getInvalidResponse() : ValidatorResponse {
+      var validatorResponse = ValidatorResponse(isSuccessful = false)
+      val msg = ValidatorErrorMessage()
+      msg.msg ="Invalid JSON"
+      msg.severity = "error"
+      validatorResponse.errorMessages =
+          ImmutableList.of(
+              msg
+          )
+      return validatorResponse
+    }
+
     @Test
     fun simple_patient() {
         val resourceText =
@@ -29,49 +41,49 @@ class ValidatorTest {
     @Test
     fun empty() {
         val resourceText = ""
-        assertEquals(validator!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
-        assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
+        assertEquals(validator!!.validate(resourceText).toJson(), INVALID_JSON_VALIDATOR_RESPONSE)
+
     }
 
     @Test
     fun array() {
         val resourceText = "[1,2,3]"
-        assertEquals(validator!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
-        assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
+        assertEquals(validator!!.validate(resourceText).toJson(), INVALID_JSON_VALIDATOR_RESPONSE)
+
     }
 
     @Test
     fun null_json() {
         val resourceText = "null"
-        assertEquals(validator!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
-        assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
+        assertEquals(validator!!.validate(resourceText).toJson(), INVALID_JSON_VALIDATOR_RESPONSE)
+
     }
 
     @Test
     fun null_java() {
         val resourceText: String? = null
-        assertEquals(validator!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
-        assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
+        assertEquals(validator!!.validate(resourceText).toJson(), INVALID_JSON_VALIDATOR_RESPONSE)
+
     }
 
     @Test
     fun number_json() {
         val resourceText = "123"
-        assertEquals(validator!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
-        assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
+        assertEquals(validator!!.validate(resourceText).toJson(), INVALID_JSON_VALIDATOR_RESPONSE)
+       // assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
     }
 
     @Test
     fun boolean_json() {
         val resourceText = "true"
-        assertEquals(validator!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
-        assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
+        assertEquals(validator!!.validate(resourceText).toJson(), INVALID_JSON_VALIDATOR_RESPONSE)
+        //assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
     }
 
     @Test
     fun bad_json() {
         val resourceText = "{a:<>}}}"
-        assertEquals(validator!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
-        assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
+        assertEquals(validator!!.validate(resourceText).toJson(), INVALID_JSON_VALIDATOR_RESPONSE)
+       // assertEquals(validatorStu3!!.validate(resourceText), INVALID_JSON_VALIDATOR_RESPONSE)
     }
 }
