@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 class ValidatorTest {
     val INVALID_JSON_VALIDATOR_RESPONSE = null
-    var validator: Validator? = null
+    var validator: Validator? = Validator(ValidatorConstants.FHIR_R4, null)
     var validatorStu3: Validator? = null
 
   /*
