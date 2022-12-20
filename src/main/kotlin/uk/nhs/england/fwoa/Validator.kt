@@ -8,23 +8,26 @@ import ca.uhn.fhir.validation.SingleValidationMessage
 import ca.uhn.fhir.validation.ValidationResult
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonSyntaxException
+import io.github.classgraph.ClassGraph
+import io.github.classgraph.Resource
 import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService
 import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport
 import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
 import org.hl7.fhir.instance.model.api.IBaseResource
+import org.hl7.fhir.utilities.npm.NpmPackage
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.util.function.Function
 import java.util.stream.Collectors
-
-
-
 
 
 class Validator(var fhirVersion: String, var implementationGuidesFolder: String?) {
 
     var ctx : FhirContext
     var fhirValidator : FhirValidator
+
     init {
         if (fhirVersion != ValidatorConstants.FHIR_R4 && fhirVersion != ValidatorConstants.FHIR_STU3) {
             throw RuntimeException("Invalid FHIR version $fhirVersion")
@@ -66,8 +69,8 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
 
         //  TODO Create a PrePopulatedValidationSupport which can be used to load custom definitions.
 
-        val prepopulatedValidationSupport: PrePopulatedValidationSupport = loadIgs(ctx)
-        supportChain.addValidationSupport(prepopulatedValidationSupport)
+        loadIgs(ctx,supportChain)
+
 
         // Create a validator using the FhirInstanceValidator module.
 
@@ -76,12 +79,21 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
         fhirValidator = ctx.newValidator().registerValidatorModule(validatorModule)
     }
 
-    private fun loadIgs(ctx: FhirContext): PrePopulatedValidationSupport {
+    private fun loadIgs(ctx: FhirContext, supportChain: ValidationSupportChain) {
         val jsonParser = ctx.newJsonParser()
         val myCodeSystems: Map<String, IBaseResource> = HashMap()
         val myStructureDefinitions: Map<String, IBaseResource> = HashMap()
         val myValueSets: Map<String, IBaseResource> = HashMap()
-        return PrePopulatedValidationSupport(ctx, myStructureDefinitions, myValueSets, myCodeSystems)
+        ClassGraph().acceptPathsNonRecursive(implementationGuidesFolder).scan().use { scanResult ->
+            scanResult.getResourcesWithExtension("tgz")
+                .forEachByteArray { res: Resource, content: ByteArray? ->
+                    println(res.path)
+                    if (content != null) {
+                        var packageContent = getPackages(content)
+                        supportChain.addValidationSupport(createPrePopulatedValidationSupport(packageContent))
+                    }
+                }
+        }
     }
 
     private fun toValidatorResponse(result: ValidationResult): ValidatorResponse {
@@ -145,5 +157,37 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
                 )
             validatorResponse
         }
+    }
+
+
+    fun createPrePopulatedValidationSupport(npmPackage: NpmPackage): PrePopulatedValidationSupport {
+        val prePopulatedSupport =
+            PrePopulatedValidationSupport(ctx)
+        getResourcesFromPackage(npmPackage).forEach(prePopulatedSupport::addResource)
+        return prePopulatedSupport
+    }
+    fun getResourcesFromPackage(npmPackage: NpmPackage): List<IBaseResource> {
+        return getResourcesFromFolder(npmPackage, "package")
+            .plus(getResourcesFromFolder(npmPackage, "examples"))
+    }
+    fun getResourcesFromFolder(npmPackage: NpmPackage, folderName: String): List<IBaseResource> {
+        val jsonParser = ctx.newJsonParser()
+        var cnt : Int = 0
+        val list = npmPackage.list(folderName).map {
+            //println(cnt.toString() + " " + it)
+            //cnt++
+            npmPackage.load(folderName, it)
+        }
+        cnt = 0
+        return list
+            .map {
+                //  println(cnt)
+                //  cnt++
+                jsonParser.parseResource(it)
+            }
+    }
+
+    open fun getPackages(content : ByteArray) : NpmPackage  {
+        return NpmPackage.fromPackage(ByteArrayInputStream(content))
     }
 }
