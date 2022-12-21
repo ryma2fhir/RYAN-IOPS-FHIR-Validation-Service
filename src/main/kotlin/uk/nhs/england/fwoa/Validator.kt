@@ -12,10 +12,7 @@ import com.google.common.collect.ImmutableList
 import com.google.gson.JsonSyntaxException
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.Resource
-import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService
-import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport
-import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport
-import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
+import org.hl7.fhir.common.hapi.validation.support.*
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
 import org.hl7.fhir.instance.model.api.IBaseResource
 import org.hl7.fhir.r4.model.StructureDefinition
@@ -76,6 +73,8 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
 
         loadIgs(ctx,supportChain)
 
+        supportChain.addValidationSupport(SnapshotGeneratingValidationSupport(ctx))
+
         generateSnapshots(supportChain)
 
         // Create a validator using the FhirInstanceValidator module.
@@ -96,6 +95,7 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
                     println(res.path)
                     if (content != null) {
                         var packageContent = getPackages(content)
+                        // May need to use the other version of PrePopulated validation support in the
                         supportChain.addValidationSupport(createPrePopulatedValidationSupport(packageContent))
                     }
                 }
