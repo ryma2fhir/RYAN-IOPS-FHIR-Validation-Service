@@ -117,11 +117,11 @@
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>1.7.20</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-base</artifactId>
             <version>${fhir.version}</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-structures-r4</artifactId>
