@@ -12,13 +12,17 @@ import com.google.common.collect.ImmutableList
 import com.google.gson.JsonSyntaxException
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.Resource
-import org.hl7.fhir.common.hapi.validation.support.*
+import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService
+import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport
+import org.hl7.fhir.common.hapi.validation.support.SnapshotGeneratingValidationSupport
+import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
 import org.hl7.fhir.instance.model.api.IBaseResource
 import org.hl7.fhir.r4.model.StructureDefinition
 import org.hl7.fhir.utilities.npm.NpmPackage
+import uk.nhs.england.fwoa.service.CapabilityStatementApplier
+import uk.nhs.england.fwoa.shared.PrePopulatedValidationSupport
 import java.io.ByteArrayInputStream
-import java.io.InputStream
 import java.time.Duration
 import java.time.Instant
 import java.util.function.Function
@@ -29,6 +33,7 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
 
     var ctx : FhirContext
     var fhirValidator : FhirValidator
+    var capabilityStatementApplier: CapabilityStatementApplier
 
     init {
         if (fhirVersion != ValidatorConstants.FHIR_R4 && fhirVersion != ValidatorConstants.FHIR_STU3) {
@@ -76,6 +81,8 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
         supportChain.addValidationSupport(SnapshotGeneratingValidationSupport(ctx))
 
         generateSnapshots(supportChain)
+
+        capabilityStatementApplier = CapabilityStatementApplier(supportChain)
 
         // Create a validator using the FhirInstanceValidator module.
 
@@ -181,8 +188,11 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
         return validatorResponse
     }
 
-    fun validate(resource: String?) : ValidatorResponse{
+    fun validate(strResource: String?) : ValidatorResponse{
+
         return try {
+            val resource = ctx.newJsonParser().parseResource(strResource)
+            capabilityStatementApplier.applyCapabilityStatementProfiles(resource)
             val result: ValidationResult = fhirValidator.validateWithResult(resource)
             toValidatorResponse(result)
         } catch (e: JsonSyntaxException) {
