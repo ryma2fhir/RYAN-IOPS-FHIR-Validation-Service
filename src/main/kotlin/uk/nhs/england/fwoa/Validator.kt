@@ -126,11 +126,7 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
             .filter { shouldGenerateSnapshot(it) }
             .forEach {
                 try {
-                    val start: Instant = Instant.now()
                     supportChain.generateSnapshot(context, it, it.url, "https://fhir.nhs.uk/R4", it.name)
-                    val end: Instant = Instant.now()
-                    val duration: Duration = Duration.between(start, end)
-
                 } catch (e: Exception) {
 
                 }
@@ -193,6 +189,7 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
         return try {
             val resource = ctx.newJsonParser().parseResource(strResource)
             capabilityStatementApplier.applyCapabilityStatementProfiles(resource)
+            //if (resource.meta != null && resource.meta.profile.size>0) println(resource.meta.profile[0])
             val result: ValidationResult = fhirValidator.validateWithResult(resource)
             toValidatorResponse(result)
         }
