@@ -8,6 +8,7 @@ import ca.uhn.fhir.parser.DataFormatException
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException
 import ca.uhn.fhir.validation.FhirValidator
 import ca.uhn.fhir.validation.SingleValidationMessage
+import ca.uhn.fhir.validation.ValidationOptions
 import ca.uhn.fhir.validation.ValidationResult
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonSyntaxException
@@ -19,6 +20,7 @@ import org.hl7.fhir.common.hapi.validation.support.SnapshotGeneratingValidationS
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
 import org.hl7.fhir.instance.model.api.IBaseResource
+import org.hl7.fhir.r4.model.OperationOutcome
 import org.hl7.fhir.r4.model.StructureDefinition
 import org.hl7.fhir.utilities.npm.NpmPackage
 import uk.nhs.england.fwoa.service.CapabilityStatementApplier
@@ -248,7 +250,19 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
             validatorResponse
         }
     }
+    fun validate(resource : IBaseResource, profile: String?) : OperationOutcome? {
 
+        if (profile != null) return fhirValidator.validateWithResult(resource, ValidationOptions().addProfile(profile))
+            .toOperationOutcome() as? OperationOutcome
+        capabilityStatementApplier.applyCapabilityStatementProfiles(resource)
+       /* val messageDefinitionErrors = messageDefinitionApplier.applyMessageDefinition(resource)
+        if (messageDefinitionErrors != null) {
+            return messageDefinitionErrors
+        }
+
+        */
+        return fhirValidator.validateWithResult(resource).toOperationOutcome() as? OperationOutcome
+    }
 
     fun createPrePopulatedValidationSupport(npmPackage: NpmPackage): PrePopulatedValidationSupport {
         val prePopulatedSupport =

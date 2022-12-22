@@ -3,6 +3,7 @@ package uk.nhs.england.fwoa.service
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
 import org.hl7.fhir.instance.model.api.IBaseResource
 import org.hl7.fhir.r4.model.CapabilityStatement
+import org.springframework.stereotype.Service
 import uk.nhs.england.fwoa.util.applyProfile
 import uk.nhs.england.fwoa.util.getResourcesOfType
 
