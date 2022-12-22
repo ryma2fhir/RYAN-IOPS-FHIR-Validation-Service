@@ -8,7 +8,7 @@ import uk.nhs.england.fwoa.provider.ValidateR4Provider
 import java.util.*
 import javax.servlet.annotation.WebServlet
 
-@WebServlet("/FHIR/R4/*", loadOnStartup = 1)
+@WebServlet("/*", loadOnStartup = 1)
 class FHIRR4RestfulServer(
     fhirContext: FhirContext,
     private val validateR4Provider: ValidateR4Provider
