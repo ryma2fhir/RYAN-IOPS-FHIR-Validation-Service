@@ -1,6 +1,6 @@
 {
   "resource": "/{proxy+}",
-  "path": "metadata",
+  "path": "/metadata",
   "httpMethod": "GET",
   "queryStringParameters": {
   },
