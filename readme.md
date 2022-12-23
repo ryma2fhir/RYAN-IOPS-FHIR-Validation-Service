@@ -1,13 +1,18 @@
-### IOPS AWS Lambda FHIR Validation
+### IOPS FHIR Validator
 
-This is based on AWS FHIRWorks java lambda validator https://github.com/awslabs/fhir-works-on-aws-deployment/tree/mainline/javaHapiValidatorLambda
-and is aimed at being deployed with AWS FHIRWorks. It is also capable of being run as a standalone module (as a spring boot application)
+This project has three purposes: 
 
-The main difference is the implementationGuides are in raw NPM format and so do not need to be unzipped (so this unzip documentation https://github.com/awslabs/fhir-works-on-aws-deployment/blob/mainline/USING_IMPLEMENTATION_GUIDES.md does not need to be followed)
-It is recommended the Implementation Guide packages are sourced from IOPS AWS FHIRWorks server (not FHIR Registry or simplifier, documentation to follow), which preprocesses the NPM packages to reduce load times
+1. To provide a FHIR Validation Service which runs either in ECS or via commandline and provides a FHIR /$validate operation 
+2. To provide a FHIR Validation Service which runs as a AWS Lambda and provides a FHIR /$validate operation
+3. To provide a FHIR Validation service for AWS FHIR Works (which works with Simplifier generated packages)
 
-If terminology testing is required or other features, please log issues on this github repository.
+It has several configuration options: 
 
+a. To validate against a supplied set of FHIR Implementation Guides (NPM packages are supplied).
+b. To validate against a configured FHIR Implementation Guide (NPM package are retrieved by the service and configured via environment variables)
+c. Optionally validate using the NHS Digital Ontology Service (configured via environment variables).
+
+The configuration is aimed at supporting different use cases. For example the lambda version with no ontology support is aimed at performing basic FHIR validation checks. This may just be FHIR core and schema validation but can also test against UKCore profiles.
 
 
 

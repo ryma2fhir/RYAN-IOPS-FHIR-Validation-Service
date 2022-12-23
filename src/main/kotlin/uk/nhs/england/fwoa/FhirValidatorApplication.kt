@@ -9,8 +9,13 @@ import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.boot.web.servlet.ServletComponentScan
 import org.springframework.context.annotation.Bean
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import uk.nhs.england.fwoa.util.CorsFilter
+import javax.servlet.Filter
 
 
 @SpringBootApplication
@@ -48,6 +53,14 @@ open class FhirValidatorApplication : ApplicationRunner {
         var validator = Validator(fhirVersion, null)
         return validator
     }
+
+    @Bean
+    open fun corsFilter() : Filter {
+        // Need to check this is working correctly
+        return CorsFilter()
+    }
+
+
 }
 
 fun main(args: Array<String>) {
