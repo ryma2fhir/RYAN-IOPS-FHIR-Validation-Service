@@ -20,7 +20,7 @@ class Handler : RequestHandler<String, ValidatorResponse> {
         if (fhirVersion == null) {
             fhirVersion = ValidatorConstants.FHIR_R4
         }
-        validator = Validator(fhirVersion, null)
+        validator = Validator(fhirVersion, null, null)
 
         /*
         Now done in the validator call above

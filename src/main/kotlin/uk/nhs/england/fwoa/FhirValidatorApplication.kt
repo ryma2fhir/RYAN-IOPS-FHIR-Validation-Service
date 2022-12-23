@@ -2,24 +2,22 @@ package uk.nhs.england.fwoa
 
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.parser.LenientErrorHandler
-import ca.uhn.fhir.rest.client.api.IGenericClient
-import ca.uhn.fhir.rest.server.RestfulServer
 import mu.KLogging
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
-import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.boot.web.servlet.ServletComponentScan
 import org.springframework.context.annotation.Bean
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import uk.nhs.england.fwoa.configuration.TerminologyValidationProperties
 import uk.nhs.england.fwoa.util.CorsFilter
 import javax.servlet.Filter
 
 
 @SpringBootApplication
 @ServletComponentScan
+@EnableConfigurationProperties(TerminologyValidationProperties::class)
 open class FhirValidatorApplication : ApplicationRunner {
     companion object : KLogging()
 
@@ -45,12 +43,12 @@ open class FhirValidatorApplication : ApplicationRunner {
     }
 
     @Bean
-    open fun validator(): Validator {
+    open fun validator(terminologyValidationProperties: TerminologyValidationProperties): Validator {
         var fhirVersion = System.getenv("FHIR_VERSION")
         if (fhirVersion == null) {
             fhirVersion = ValidatorConstants.FHIR_R4
         }
-        var validator = Validator(fhirVersion, null)
+        var validator = Validator(fhirVersion, null, terminologyValidationProperties)
         return validator
     }
 

@@ -15,10 +15,7 @@ import com.google.gson.JsonSyntaxException
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.Resource
 import mu.KLogging
-import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService
-import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport
-import org.hl7.fhir.common.hapi.validation.support.SnapshotGeneratingValidationSupport
-import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
+import org.hl7.fhir.common.hapi.validation.support.*
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
 import org.hl7.fhir.instance.model.api.IBaseResource
 import org.hl7.fhir.r4.model.Bundle
@@ -26,18 +23,25 @@ import org.hl7.fhir.r4.model.OperationOutcome
 import org.hl7.fhir.r4.model.ResourceType
 import org.hl7.fhir.r4.model.StructureDefinition
 import org.hl7.fhir.utilities.npm.NpmPackage
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import uk.nhs.england.fwoa.configuration.TerminologyValidationProperties
 import uk.nhs.england.fwoa.service.CapabilityStatementApplier
 import uk.nhs.england.fwoa.service.MessageDefinitionApplier
+import uk.nhs.england.fwoa.shared.NHSDCachingValidationSupport
 import uk.nhs.england.fwoa.shared.PrePopulatedValidationSupport
+import uk.nhs.england.fwoa.shared.SwitchedTerminologyServiceValidationSupport
+import uk.nhs.england.fwoa.shared.UnsupportedCodeSystemWarningValidationSupport
+import uk.nhs.england.fwoa.util.AccessTokenInterceptor
 import uk.nhs.england.fwoa.util.createOperationOutcome
 import java.io.ByteArrayInputStream
-import java.time.Duration
-import java.time.Instant
+import java.util.*
 import java.util.function.Function
+import java.util.function.Predicate
 import java.util.stream.Collectors
 
 
-class Validator(var fhirVersion: String, var implementationGuidesFolder: String?) {
+class Validator(var fhirVersion: String, var implementationGuidesFolder: String?, var terminologyValidationProperties: TerminologyValidationProperties?) {
 
     var ctx : FhirContext
     var fhirValidator : FhirValidator
@@ -80,7 +84,7 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
         // This module implements terminology services for in-memory code validation
 
         // This module implements terminology services for in-memory code validation
-        supportChain.addValidationSupport(InMemoryTerminologyServerValidationSupport(ctx))
+        supportChain.addValidationSupport(switchedTerminologyServiceValidationSupport(ctx, remoteTerminologyServiceValidationSupport(ctx, null)))
 
         // Create a PrePopulatedValidationSupport which can be used to load custom definitions.
 
@@ -117,6 +121,57 @@ class Validator(var fhirVersion: String, var implementationGuidesFolder: String?
                     }
                 }
         }
+    }
+
+
+
+
+    open fun remoteTerminologyServiceValidationSupport(
+        @Qualifier("R4") fhirContext: FhirContext,
+        optionalAuthorizedClientManager: OAuth2AuthorizedClientManager?
+    ): RemoteTerminologyServiceValidationSupport? {
+        //logger.info("Using remote terminology server at ${terminologyValidationProperties.url}")
+        if (terminologyValidationProperties != null) {
+            val validationSupport =
+                RemoteTerminologyServiceValidationSupport(
+                    fhirContext
+                )
+            validationSupport.setBaseUrl(terminologyValidationProperties!!.url)
+
+            if (optionalAuthorizedClientManager != null) {
+                val authorizedClientManager = optionalAuthorizedClientManager
+                val accessTokenInterceptor = AccessTokenInterceptor(authorizedClientManager)
+                validationSupport.addClientInterceptor(accessTokenInterceptor)
+            }
+
+            return validationSupport
+        }
+        else {
+            return null
+        }
+    }
+    fun switchedTerminologyServiceValidationSupport(
+         fhirContext: FhirContext,
+        optionalRemoteTerminologySupport: RemoteTerminologyServiceValidationSupport?
+    ): SwitchedTerminologyServiceValidationSupport {
+        val snomedValidationSupport = if (optionalRemoteTerminologySupport != null) {
+            NHSDCachingValidationSupport(
+                optionalRemoteTerminologySupport)
+
+        } else {
+            UnsupportedCodeSystemWarningValidationSupport(fhirContext)
+        }
+
+        return SwitchedTerminologyServiceValidationSupport(
+            fhirContext,
+            InMemoryTerminologyServerValidationSupport(fhirContext),
+            snomedValidationSupport,
+            Predicate { it.startsWith("http://snomed.info/sct")
+                    || it.startsWith("https://dmd.nhs.uk")
+                    || it.startsWith("http://read.info")
+                    || it.startsWith("http://hl7.org/fhir/sid/icd")
+            }
+        )
     }
 
     fun generateSnapshots(supportChain: IValidationSupport) {
