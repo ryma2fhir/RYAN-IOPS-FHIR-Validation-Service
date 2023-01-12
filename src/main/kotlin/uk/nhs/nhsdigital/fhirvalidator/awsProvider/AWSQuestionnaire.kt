@@ -3,6 +3,7 @@ package uk.nhs.nhsdigital.fhirvalidator.awsProvider
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.api.MethodOutcome
 import ca.uhn.fhir.rest.client.api.IGenericClient
+import ca.uhn.fhir.rest.param.TokenParam
 import org.hl7.fhir.instance.model.api.IBaseBundle
 import org.hl7.fhir.r4.model.*
 import org.slf4j.LoggerFactory
@@ -21,7 +22,7 @@ class AWSQuestionnaire(val awsClient: IGenericClient,
 ) {
 
     private val log = LoggerFactory.getLogger("FHIRAudit")
-    public fun getOrganization(identifier: Identifier): Organization? {
+    public fun get(identifier: Identifier): Organization? {
         var bundle: Bundle? = null
         var retry = 3
         while (retry > 0) {
@@ -47,27 +48,66 @@ class AWSQuestionnaire(val awsClient: IGenericClient,
         return bundle.entryFirstRep.resource as Organization
     }
 
-    public fun getOrganization(reference: Reference, bundle: Bundle): Organization? {
+    public fun search(url : TokenParam?) : List<Questionnaire> {
+        var resources = mutableListOf<Questionnaire>()
+        var bundle: Bundle? = null
+        var retry = 3
+        while (retry > 0) {
+            try {
+                if (url != null) {
+                    bundle = awsClient
+                        .search<IBaseBundle>()
+                        .forResource(Questionnaire::class.java)
+                        .where(
+                            Questionnaire.URL.matches().value(url.value)
+                        )
+                        .returnBundle(Bundle::class.java)
+                        .execute()
+                    break
+                } else {
+                    bundle = awsClient
+                        .search<IBaseBundle>()
+                        .forResource(Questionnaire::class.java)
+                        .returnBundle(Bundle::class.java)
+                        .execute()
+                    break
+                }
+            } catch (ex: Exception) {
+                // do nothing
+                log.error(ex.message)
+                retry--
+                if (retry == 0) throw ex
+            }
+        }
+        if (bundle!=null && bundle.hasEntry()) {
+            for (entry in bundle.entry) {
+                if (entry.hasResource() && entry.resource is Questionnaire) resources.add(entry.resource as Questionnaire)
+            }
+        }
+        return resources
+    }
+
+    public fun get(reference: Reference, bundle: Bundle): Organization? {
         var awsOrganization : Organization? = null
         if (reference.hasReference()) {
             val organization = awsBundle.findResource(bundle, "Organization", reference.reference) as Organization
             if (organization != null) {
                 for ( identifier in organization.identifier) {
-                    awsOrganization = getOrganization(identifier)
+                    awsOrganization = get(identifier)
                     if (awsOrganization != null) {
                         break;
                     }
                 }
                 if (awsOrganization == null) {
-                    createOrganization(organization,bundle)
+                    create(organization,bundle)
                 } else return awsOrganization
             }
         } else if (reference.hasIdentifier()) {
-            return getOrganization(reference.identifier)
+            return get(reference.identifier)
         }
         return null
     }
-    fun createOrganization(newOrganization: Organization, bundle: Bundle): MethodOutcome? {
+    fun create(newOrganization: Organization, bundle: Bundle): MethodOutcome? {
         val awsBundle: Bundle? = null
         var response: MethodOutcome? = null
 

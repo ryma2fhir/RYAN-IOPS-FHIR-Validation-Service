@@ -10,13 +10,15 @@ import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
 import org.hl7.fhir.r4.model.*
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
+import uk.nhs.nhsdigital.fhirvalidator.awsProvider.AWSQuestionnaire
 import uk.nhs.nhsdigital.fhirvalidator.service.CodingSupport
 import uk.nhs.nhsdigital.fhirvalidator.service.ImplementationGuideParser
 import java.nio.charset.StandardCharsets
 
 @Component
 class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirContext,
-                             private val supportChain: ValidationSupportChain
+                             private val supportChain: ValidationSupportChain,
+    private val awsQuestionnaire: AWSQuestionnaire
 ) : IResourceProvider {
     /**
      * The getResourceType method comes from IResourceProvider, and must
@@ -32,11 +34,8 @@ class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirConte
     companion object : KLogging()
 
     @Search
-    fun search(@RequiredParam(name = Questionnaire.SP_URL) url: TokenParam): List<Questionnaire> {
+    fun search(@OptionalParam(name = Questionnaire.SP_URL) url: TokenParam?): List<Questionnaire> {
         val list = mutableListOf<Questionnaire>()
-        val resource = supportChain.fetchResource(Questionnaire::class.java,java.net.URLDecoder.decode(url.value, StandardCharsets.UTF_8.name()))
-        if (resource != null) list.add(resource)
-
-        return list
+        return awsQuestionnaire.search(url)
     }
 }
