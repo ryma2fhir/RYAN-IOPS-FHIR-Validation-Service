@@ -3,11 +3,13 @@ target/
 src/main/resources/validation.json
 src/main/resources/nhs-validation.json
 src/main/resources/implementationGuides/*.tgz
-src/uk.nhsdigital.fhir.fwoa.main/resources/*.tgz
+src/uk.nhs.digital.fhir.fwoa.main/resources/*.tgz
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 **/src/uk.nhsdigital.fhir.fwoa.main/resources/*.tgz
+src/main/resources/*.tgz
+**/src/main/resources/*.tgz
 
 ### STS ###
 .apt_generated
