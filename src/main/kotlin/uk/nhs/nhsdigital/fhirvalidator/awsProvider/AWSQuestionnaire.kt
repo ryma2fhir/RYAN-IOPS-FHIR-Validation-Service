@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.api.MethodOutcome
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import ca.uhn.fhir.rest.param.TokenParam
 import org.hl7.fhir.instance.model.api.IBaseBundle
+import org.hl7.fhir.instance.model.api.IBaseResource
 import org.hl7.fhir.r4.model.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -22,31 +23,6 @@ class AWSQuestionnaire(val awsClient: IGenericClient,
 ) {
 
     private val log = LoggerFactory.getLogger("FHIRAudit")
-    public fun get(identifier: Identifier): Organization? {
-        var bundle: Bundle? = null
-        var retry = 3
-        while (retry > 0) {
-            try {
-                bundle = awsClient
-                    .search<IBaseBundle>()
-                    .forResource(Organization::class.java)
-                    .where(
-                        Organization.IDENTIFIER.exactly()
-                            .systemAndCode(identifier.system, identifier.value)
-                    )
-                    .returnBundle(Bundle::class.java)
-                    .execute()
-                break
-            } catch (ex: Exception) {
-                // do nothing
-                log.error(ex.message)
-                retry--
-                if (retry == 0) throw ex
-            }
-        }
-        if (bundle == null || !bundle.hasEntry()) return null
-        return bundle.entryFirstRep.resource as Organization
-    }
 
     public fun search(url : TokenParam?) : List<Questionnaire> {
         var resources = mutableListOf<Questionnaire>()
@@ -87,39 +63,18 @@ class AWSQuestionnaire(val awsClient: IGenericClient,
         return resources
     }
 
-    public fun get(reference: Reference, bundle: Bundle): Organization? {
-        var awsOrganization : Organization? = null
-        if (reference.hasReference()) {
-            val organization = awsBundle.findResource(bundle, "Organization", reference.reference) as Organization
-            if (organization != null) {
-                for ( identifier in organization.identifier) {
-                    awsOrganization = get(identifier)
-                    if (awsOrganization != null) {
-                        break;
-                    }
-                }
-                if (awsOrganization == null) {
-                    create(organization,bundle)
-                } else return awsOrganization
-            }
-        } else if (reference.hasIdentifier()) {
-            return get(reference.identifier)
-        }
-        return null
-    }
-    fun create(newOrganization: Organization, bundle: Bundle): MethodOutcome? {
-        val awsBundle: Bundle? = null
+    fun update(questionnaire: Questionnaire, theId: IdType): MethodOutcome? {
         var response: MethodOutcome? = null
-
         var retry = 3
         while (retry > 0) {
             try {
                 response = awsClient
-                    .create()
-                    .resource(newOrganization)
+                    .update()
+                    .resource(questionnaire)
+                    .withId(theId)
                     .execute()
-                val organization = response.resource as Organization
-                val auditEvent = awsAuditEvent.createAudit(organization, AuditEvent.AuditEventAction.C)
+                val storedQuestionnaire = response.resource as Questionnaire
+                val auditEvent = awsAuditEvent.createAudit(storedQuestionnaire, AuditEvent.AuditEventAction.U)
                 awsAuditEvent.writeAWS(auditEvent)
                 break
             } catch (ex: Exception) {
@@ -131,4 +86,54 @@ class AWSQuestionnaire(val awsClient: IGenericClient,
         }
         return response
     }
+
+    fun create(questionnaire: Questionnaire): MethodOutcome? {
+        var response: MethodOutcome? = null
+        var retry = 3
+        while (retry > 0) {
+            try {
+                response = awsClient
+                    .create()
+                    .resource(questionnaire)
+                    .execute()
+                val storedQuestionnaire = response.resource as Questionnaire
+                val auditEvent = awsAuditEvent.createAudit(storedQuestionnaire, AuditEvent.AuditEventAction.C)
+                awsAuditEvent.writeAWS(auditEvent)
+                break
+            } catch (ex: Exception) {
+                // do nothing
+                log.error(ex.message)
+                retry--
+                if (retry == 0) throw ex
+            }
+        }
+        return response
+    }
+
+    fun delete(theId: IdType): MethodOutcome? {
+        var response: MethodOutcome? = null
+        var retry = 3
+        while (retry > 0) {
+            try {
+                response = awsClient
+                    .delete()
+                    .resourceById(theId)
+                    .execute()
+
+                /*
+                val auditEvent = awsAuditEvent.createAudit(storedQuestionnaire, AuditEvent.AuditEventAction.D)
+                awsAuditEvent.writeAWS(auditEvent)
+                */
+                break
+
+            } catch (ex: Exception) {
+                // do nothing
+                log.error(ex.message)
+                retry--
+                if (retry == 0) throw ex
+            }
+        }
+        return response
+    }
+
 }

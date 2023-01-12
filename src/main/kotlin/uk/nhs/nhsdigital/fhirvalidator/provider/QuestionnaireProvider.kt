@@ -3,6 +3,8 @@ package uk.nhs.nhsdigital.fhirvalidator.provider
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.support.ValidationSupportContext
 import ca.uhn.fhir.rest.annotation.*
+import ca.uhn.fhir.rest.api.MethodOutcome
+import ca.uhn.fhir.rest.api.server.RequestDetails
 import ca.uhn.fhir.rest.param.TokenParam
 import ca.uhn.fhir.rest.server.IResourceProvider
 import mu.KLogging
@@ -14,6 +16,7 @@ import uk.nhs.nhsdigital.fhirvalidator.awsProvider.AWSQuestionnaire
 import uk.nhs.nhsdigital.fhirvalidator.service.CodingSupport
 import uk.nhs.nhsdigital.fhirvalidator.service.ImplementationGuideParser
 import java.nio.charset.StandardCharsets
+import javax.servlet.http.HttpServletRequest
 
 @Component
 class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirContext,
@@ -37,5 +40,27 @@ class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirConte
     fun search(@OptionalParam(name = Questionnaire.SP_URL) url: TokenParam?): List<Questionnaire> {
         val list = mutableListOf<Questionnaire>()
         return awsQuestionnaire.search(url)
+    }
+
+    @Delete
+    fun delete(
+        theRequest: HttpServletRequest,
+        @IdParam theId: IdType,
+        theRequestDetails: RequestDetails?
+    ): MethodOutcome? {
+        return awsQuestionnaire.delete(theId)
+    }
+    @Update
+    fun update(
+        theRequest: HttpServletRequest,
+        @ResourceParam questionnaire: Questionnaire,
+        @IdParam theId: IdType,
+        theRequestDetails: RequestDetails?
+    ): MethodOutcome? {
+        return awsQuestionnaire.update(questionnaire, theId)
+    }
+    @Create
+    fun create(theRequest: HttpServletRequest, @ResourceParam questionnaire: Questionnaire): MethodOutcome? {
+        return awsQuestionnaire.create(questionnaire)
     }
 }

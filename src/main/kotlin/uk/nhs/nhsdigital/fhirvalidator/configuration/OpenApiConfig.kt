@@ -478,8 +478,45 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
 
 
         oas.path("/FHIR/R4/Questionnaire",getPathItem(getTerminologyTagName(CONFORMANCE),"Questionnaire", "Questionnaire", "url" , "https://example.fhir.nhs.uk/Questionnaire/Simple-Blood-Pressure",
-            "A structured set of questions intended to guide the collection of answers from end-users. Questionnaires provide detailed control over order, presentation, phraseology and grouping to allow coherent, consistent data collection."))
-        // 3.101 Translate Code [ITI-101]
+            "A structured set of questions intended to guide the collection of answers from end-users. Questionnaires provide detailed control over order, presentation, phraseology and grouping to allow coherent, consistent data collection.")
+            .post(Operation()
+                .addTagsItem(CONFORMANCE)
+                .summary("Add Questionnaire")
+                .responses(getApiResponses())
+                .requestBody(RequestBody().content(Content()
+                    .addMediaType("application/fhir+json",
+                        MediaType()
+                            .schema(StringSchema()))
+                ))))
+
+        oas.path("/FHIR/R4/Questionnaire/{id}",
+            PathItem().put(Operation()
+                .addTagsItem(CONFORMANCE)
+                .summary("Update Questionnaire")
+                .responses(getApiResponses())
+                .addParametersItem(Parameter()
+                    .name("id")
+                    .`in`("path")
+                    .required(false)
+                    .style(Parameter.StyleEnum.SIMPLE)
+                    .description("The id of the Questionnaire to be updated")
+                    .schema(StringSchema()))
+                .requestBody(RequestBody().content(Content()
+                    .addMediaType("application/fhir+json",
+                        MediaType()
+                            .schema(StringSchema()))
+                )))
+                .delete(Operation()
+                    .addTagsItem(CONFORMANCE)
+                    .summary("Delete Questionnaire")
+                    .responses(getApiResponses())
+                    .addParametersItem(Parameter()
+                        .name("id")
+                        .`in`("path")
+                        .required(false)
+                        .style(Parameter.StyleEnum.SIMPLE)
+                        .description("The id of the Questionnaire to be deleted")
+                        .schema(StringSchema()))))
 
         // Terminology Misc
 
