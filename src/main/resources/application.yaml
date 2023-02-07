@@ -3,6 +3,7 @@ server:
   tomcat:
     threads:
       max: 10
+  forward-headers-strategy: native
 
 management:
   health:
@@ -17,6 +18,9 @@ fhir:
     name: IOPS FHIR Testing
     baseUrl: https://3cdzg7kbj4.execute-api.eu-west-2.amazonaws.com/poc/Conformance
     version: 2.7.1
+
+
+
 
 ###Remote terminology validation:
 
