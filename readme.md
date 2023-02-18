@@ -1,5 +1,7 @@
 ### IOPS FHIR Validator
 
+[Demonstration Server](http://lb-fhir-validator-924628614.eu-west-2.elb.amazonaws.com/)
+
 This project has three purposes: 
 
 1. To provide a FHIR Validation Service which runs either in ECS or via commandline and provides a FHIR /$validate operation 
