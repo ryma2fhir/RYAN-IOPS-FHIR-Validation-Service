@@ -55,8 +55,8 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
                     .version(fhirServerProperties.server.version)
                     .description(fhirServerProperties.server.name
                             + "\n "
-                            + "\n [UK Core Implementation Guide (1.0.0-pre-release)](https://simplifier.net/guide/ukcoreimplementationguide0.5.0-stu1/home?version=current)"
-                            + "\n\n [NHS Digital Implementation Guide (2.6.0)](https://simplifier.net/guide/nhsdigital?version=2.6.0)"
+                            + "\n [UK Core Implementation Guide (fhir.r4.ukcore.stu3.currentbuild 0.0.2-pre-release)](https://simplifier.net/guide/ukcoreimplementationguide0.5.0-stu1/home?version=current)"
+                            + "\n\n [NHS Digital Implementation Guide (2.8.0-prerelease)](https://simplifier.net/guide/nhsdigital?version=2.6.0)"
                         )
                     .termsOfService("http://swagger.io/terms/")
                     .license(License().name("Apache 2.0").url("http://springdoc.org"))
