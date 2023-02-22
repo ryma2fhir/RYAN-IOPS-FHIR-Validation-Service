@@ -19,8 +19,11 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import uk.nhs.england.fhirvalidator.awsProvider.AWSAuditEvent
+import uk.nhs.england.fhirvalidator.awsProvider.AWSQuestionnaire
 import uk.nhs.england.fhirvalidator.model.SimplifierPackage
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
+import uk.nhs.england.fhirvalidator.shared.AWSFhirWorksValidationSupport
 import uk.nhs.england.fhirvalidator.shared.NHSDCachingValidationSupport
 import uk.nhs.england.fhirvalidator.shared.RemoteTerminologyServiceValidationSupport
 import uk.nhs.england.fhirvalidator.util.AccessTokenInterceptor
@@ -68,13 +71,16 @@ open class ValidationConfiguration(
     @Bean("SupportChain")
     open fun validationSupportChain(
         @Qualifier("R4") fhirContext: FhirContext,
-        switchedTerminologyServiceValidationSupport: SwitchedTerminologyServiceValidationSupport
+        switchedTerminologyServiceValidationSupport: SwitchedTerminologyServiceValidationSupport,
+        awsQuestionnaire: AWSQuestionnaire,
+        awsAuditEvent: AWSAuditEvent
     ): ValidationSupportChain {
         val supportChain = ValidationSupportChain(
             DefaultProfileValidationSupport(fhirContext),
             SnapshotGeneratingValidationSupport(fhirContext),
             CommonCodeSystemsTerminologyService(fhirContext),
-            switchedTerminologyServiceValidationSupport
+            switchedTerminologyServiceValidationSupport,
+            AWSFhirWorksValidationSupport(fhirContext, awsQuestionnaire, awsAuditEvent)
         )
         getPackages()
         if (npmPackages != null) {

@@ -17,9 +17,7 @@ import uk.nhs.england.fhirvalidator.configuration.FHIRServerProperties
 class AWSQuestionnaire(val awsClient: IGenericClient,
     //sqs: AmazonSQS?,
                        @Qualifier("R4") val ctx: FhirContext,
-                       val fhirServerProperties: FHIRServerProperties,
-                       val awsAuditEvent: AWSAuditEvent,
-                       val awsBundle: AWSBundle
+                       val awsAuditEvent: AWSAuditEvent
 ) {
 
     private val log = LoggerFactory.getLogger("FHIRAudit")
