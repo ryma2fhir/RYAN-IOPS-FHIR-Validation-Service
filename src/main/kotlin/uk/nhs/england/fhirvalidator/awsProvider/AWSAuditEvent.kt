@@ -1,7 +1,6 @@
 package uk.nhs.england.fhirvalidator.awsProvider
 
 import ca.uhn.fhir.context.FhirContext
-import ca.uhn.fhir.rest.client.api.IGenericClient
 import org.hl7.fhir.r4.model.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier

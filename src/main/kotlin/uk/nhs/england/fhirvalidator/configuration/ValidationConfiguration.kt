@@ -23,9 +23,7 @@ import uk.nhs.england.fhirvalidator.awsProvider.AWSAuditEvent
 import uk.nhs.england.fhirvalidator.awsProvider.AWSQuestionnaire
 import uk.nhs.england.fhirvalidator.model.SimplifierPackage
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
-import uk.nhs.england.fhirvalidator.shared.AWSFhirWorksValidationSupport
-import uk.nhs.england.fhirvalidator.shared.NHSDCachingValidationSupport
-import uk.nhs.england.fhirvalidator.shared.RemoteTerminologyServiceValidationSupport
+import uk.nhs.england.fhirvalidator.awsProvider.AWSValidationSupport
 import uk.nhs.england.fhirvalidator.util.AccessTokenInterceptor
 import uk.nhs.england.fhirvalidator.validationSupport.SwitchedTerminologyServiceValidationSupport
 import uk.nhs.england.fhirvalidator.validationSupport.UnsupportedCodeSystemWarningValidationSupport
@@ -80,7 +78,7 @@ open class ValidationConfiguration(
             SnapshotGeneratingValidationSupport(fhirContext),
             CommonCodeSystemsTerminologyService(fhirContext),
             switchedTerminologyServiceValidationSupport,
-            AWSFhirWorksValidationSupport(fhirContext, awsQuestionnaire, awsAuditEvent)
+            AWSValidationSupport(fhirContext, awsQuestionnaire)
         )
         getPackages()
         if (npmPackages != null) {
