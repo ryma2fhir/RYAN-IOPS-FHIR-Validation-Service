@@ -34,14 +34,19 @@ class AWSValidationSupport(theFhirContext: FhirContext?, _awsQuestionnaire: AWSQ
 
     override fun <T : IBaseResource?> fetchResource(theClass: Class<T>?, theUri: String?): T? {
         try {
-            val foundQuestionnaire = awsQuestionnaire!!.search(TokenParam().setValue(theUri))
+            if (theClass != null) {
+                if (theClass.simpleName.equals("Questionnaire")) {
+                    val foundQuestionnaire = awsQuestionnaire!!.search(TokenParam().setValue(theUri))
 
-            return if (foundQuestionnaire.size > 0) foundQuestionnaire[0] as T else null
+                    return if (foundQuestionnaire.size > 0) foundQuestionnaire[0] as T else null
+                }
+            }
         }
         catch (ex : Exception) {
             logger.error(ex.message)
             return null
         }
+        return null
     }
 
 
