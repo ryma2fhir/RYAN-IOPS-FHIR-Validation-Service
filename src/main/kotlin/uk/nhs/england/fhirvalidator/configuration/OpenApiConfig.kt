@@ -31,16 +31,11 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
     var UTILITY = "Utility"
     var EXPANSION = "ValueSet Expansion (inc. Filtering)"
     var CONFORMANCE = "FHIR Package Queries"
-   // val SVCM = "FHIR Terminology"
-  //  val SVCM_95 = "Query Value Set"
-  //  val SVCM_96 = "Query Code System"
-  //  val SVCM_97 = "Expand Value Set"
+
     val SVCM_98 = "Lookup Code"
-   // val SVCM_99 = "Validate Code"
-   // val SVCM_100 = "Query Concept Map"
-   // val SVCM_101 = "Translate Code"
     var MEDICATION_DEFINITION = "Experimental - FHIR R4B Medication Definition"
     var EXPERIMENTAL = "Experimental"
+    var FORMS = "Structured Data Capture"
 
     @Bean
     open fun customOpenAPI(
@@ -81,25 +76,13 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
             .name(SVCM_98)
             .description("[lookup](https://www.hl7.org/fhir/R4/operation-codesystem-lookup.html)")
         )
-/*
-        oas.addTagsItem(io.swagger.v3.oas.models.tags.Tag()
-            .name(SVCM)
-            .description("[HL7 FHIR Terminology](https://www.hl7.org/fhir/R4/terminologies-systems.html)")
-            .externalDocs(ExternalDocumentation()
-                .description("")
-                .url(""))
+        oas.addTagsItem(
+            io.swagger.v3.oas.models.tags.Tag()
+                .name(FORMS)
+                .description("[HL7 FHIR Structured Data Capture](http://hl7.org/fhir/uv/sdc/) \n"
+                )
         )
-  */
 
-        /*
-        oas.addTagsItem(getTerminologyTag("95",SVCM_95))
-        oas.addTagsItem(getTerminologyTag("96",SVCM_96))
-        oas.addTagsItem(getTerminologyTag("97",SVCM_97))
-        oas.addTagsItem(getTerminologyTag("98",SVCM_98))
-       // oas.addTagsItem(getTerminologyTag("99",SVCM_99))
-        oas.addTagsItem(getTerminologyTag("100",SVCM_100))
-        oas.addTagsItem(getTerminologyTag("101",SVCM_101))
-*/
         val examples = LinkedHashMap<String,Example?>()
         examples.put("Patient PDS",
             Example().value(FHIRExamples().loadExample("Patient-PDS.json",ctx))
@@ -477,10 +460,17 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
                     "the matching concept maps."))
 
 
-        oas.path("/FHIR/R4/Questionnaire",getPathItem(getTerminologyTagName(CONFORMANCE),"Questionnaire", "Questionnaire", "url" , "https://example.fhir.nhs.uk/Questionnaire/Simple-Blood-Pressure",
+        oas.path("/FHIR/R4/Questionnaire",getPathItem(getTerminologyTagName(FORMS),"Questionnaire", "Questionnaire", "url" , "https://example.fhir.nhs.uk/Questionnaire/86923-0",
             "A structured set of questions intended to guide the collection of answers from end-users. Questionnaires provide detailed control over order, presentation, phraseology and grouping to allow coherent, consistent data collection.")
+                .addParametersItem(Parameter()
+                    .name("questionnaire-code")
+                    .`in`("query")
+                    .required(false)
+                    .style(Parameter.StyleEnum.SIMPLE)
+                    .description("A code that matches one of the Questionnaire.code codings")
+                    .schema(StringSchema()))
             .post(Operation()
-                .addTagsItem(CONFORMANCE)
+                .addTagsItem(FORMS)
                 .summary("Add Questionnaire")
                 .responses(getApiResponses())
                 .requestBody(RequestBody().content(Content()
@@ -491,7 +481,7 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
 
         oas.path("/FHIR/R4/Questionnaire/{id}",
             PathItem().put(Operation()
-                .addTagsItem(CONFORMANCE)
+                .addTagsItem(FORMS)
                 .summary("Update Questionnaire")
                 .responses(getApiResponses())
                 .addParametersItem(Parameter()
@@ -506,8 +496,19 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
                         MediaType()
                             .schema(StringSchema()))
                 )))
+                .get(Operation()
+                    .addTagsItem(FORMS)
+                    .summary("Read Questionnaire")
+                    .responses(getApiResponses())
+                    .addParametersItem(Parameter()
+                        .name("id")
+                        .`in`("path")
+                        .required(false)
+                        .style(Parameter.StyleEnum.SIMPLE)
+                        .description("The id of the Questionnaire to be retrieved")
+                        .schema(StringSchema().example("56969434-1980-4262-b6a7-ed1c8aca5ec2"))))
                 .delete(Operation()
-                    .addTagsItem(CONFORMANCE)
+                    .addTagsItem(FORMS)
                     .summary("Delete Questionnaire")
                     .responses(getApiResponses())
                     .addParametersItem(Parameter()

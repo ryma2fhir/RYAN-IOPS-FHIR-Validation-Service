@@ -132,4 +132,29 @@ class AWSQuestionnaire(val awsClient: IGenericClient,
         return response
     }
 
+    /*
+    fun read(theId: IdType): MethodOutcome? {
+        var response = MethodOutcome()
+        var retry = 3
+        while (retry > 0) {
+            try {
+                val result = awsClient
+                    .read()
+                    .resource(Questionnaire::class.java)
+                    .withId(theId)
+                    .execute()
+                if (result != null) {
+                    response.setResource(result)
+                }
+                break
+
+            } catch (ex: Exception) {
+                // do nothing
+                log.error(ex.message)
+                retry--
+                if (retry == 0) throw ex
+            }
+        }
+        return response
+    }*/
 }

@@ -83,9 +83,9 @@ class CapabilityStatementInterceptor(
         cs.name = fhirServerProperties.server.name
         cs.software.name = fhirServerProperties.server.name
         cs.software.version = fhirServerProperties.server.version
-        cs.publisher = "NHS Digital"
-        cs.implementation.url = "https://simplifier.net/guide/nhsdigital"
-        cs.implementation.description = "NHS Digital FHIR Implementation Guide"
+        cs.publisher = "NHS England"
+        cs.implementation.url = fhirServerProperties.server.baseUrl + "/FHIR/R4"
+        cs.implementation.description = "NHS England FHIR Conformance"
     }
 
     fun getResourceComponent(type : String, cs : CapabilityStatement ) : CapabilityStatement.CapabilityStatementRestResourceComponent? {
