@@ -116,8 +116,9 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifie
                     `is`.close()
                 }
             } catch (ex: FileNotFoundException) {
+                retry--
                 null
-            } catch (ex: IOException) {
+            } catch (ex: Exception) {
                 retry--
                 if (ex.message != null) {
                     if (ex.message!!.contains("401") || ex.message!!.contains("403")) {
@@ -250,7 +251,7 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifie
             }
         }  catch (ex: FileNotFoundException) {
             throw UnprocessableEntityException(ex.message)
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw UnprocessableEntityException(ex.message)
         }
     }
@@ -292,7 +293,7 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifie
              */
         }  catch (ex: FileNotFoundException) {
             throw UnprocessableEntityException(ex.message)
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw UnprocessableEntityException(ex.message)
         }
     }
