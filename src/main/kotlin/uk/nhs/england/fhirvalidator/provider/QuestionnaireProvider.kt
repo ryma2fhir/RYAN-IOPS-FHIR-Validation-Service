@@ -5,6 +5,8 @@ import ca.uhn.fhir.context.support.ValidationSupportContext
 import ca.uhn.fhir.rest.annotation.*
 import ca.uhn.fhir.rest.api.MethodOutcome
 import ca.uhn.fhir.rest.api.server.RequestDetails
+import ca.uhn.fhir.rest.param.DateParam
+import ca.uhn.fhir.rest.param.StringParam
 import ca.uhn.fhir.rest.param.TokenParam
 import ca.uhn.fhir.rest.server.IResourceProvider
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException
@@ -40,7 +42,12 @@ class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirConte
 
     @Search
     fun search(@OptionalParam(name = Questionnaire.SP_URL) url: TokenParam?,
-               @OptionalParam(name = Questionnaire.SP_IDENTIFIER) identifier: TokenParam?): List<Questionnaire> {
+               @OptionalParam(name = Questionnaire.SP_IDENTIFIER) identifier: TokenParam?,
+               @OptionalParam(name = Questionnaire.SP_NAME) name: StringParam?,
+               @OptionalParam(name = Questionnaire.SP_TITLE) title: StringParam?,
+               @OptionalParam(name = Questionnaire.SP_DATE) date: DateParam?,
+               @OptionalParam(name = Questionnaire.SP_STATUS) status: StringParam?
+    ): List<Questionnaire> {
         val list = mutableListOf<Questionnaire>()
         return awsQuestionnaire.search(url)
     }
@@ -80,7 +87,7 @@ class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirConte
             questionnaire.url = "https://example.fhir.nhs.uk/Questionnaire/"+questionnaire.codeFirstRep.code
         }
         if (!questionnaire.hasUrl()) throw UnprocessableEntityException("A Questionnaire.code or Questionnaire.url is required")
-        val duplicateCheck = search(TokenParam().setValue(questionnaire.url),null)
+        val duplicateCheck = search(TokenParam().setValue(questionnaire.url),null, null, null,null, null)
         if (duplicateCheck.size>0) throw UnprocessableEntityException("A Questionnaire with this definition alrady exists.")
         return awsQuestionnaire.create(questionnaire)
     }
