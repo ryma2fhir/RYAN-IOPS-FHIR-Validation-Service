@@ -36,6 +36,7 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
     var MEDICATION_DEFINITION = "Experimental - FHIR R4B Medication Definition"
     var EXPERIMENTAL = "Experimental"
     var FORMS = "Structured Data Capture"
+    var TERMINOLOGY = "Terminology"
 
     @Bean
     open fun customOpenAPI(
@@ -51,7 +52,7 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
                     .description(fhirServerProperties.server.name
                             + "\n "
                             + "\n [UK Core Implementation Guide (fhir.r4.ukcore.stu3.currentbuild 0.0.3-pre-release)](https://simplifier.net/guide/ukcoreimplementationguide0.5.0-stu1/home?version=current)"
-                            + "\n\n [NHS Digital Implementation Guide (2.8.3-prerelease)](https://simplifier.net/guide/nhsdigital)"
+                            + "\n\n [NHS Digital Implementation Guide (2.8.4-prerelease)](https://simplifier.net/guide/nhsdigital)"
                         )
                     .termsOfService("http://swagger.io/terms/")
                     .license(License().name("Apache 2.0").url("http://springdoc.org"))
@@ -81,6 +82,10 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
                 .name(FORMS)
                 .description("[HL7 FHIR Structured Data Capture](http://hl7.org/fhir/uv/sdc/) \n"
                 )
+        )
+        oas.addTagsItem(
+            io.swagger.v3.oas.models.tags.Tag()
+                .name(TERMINOLOGY)
         )
 
         val examples = LinkedHashMap<String,Example?>()
@@ -212,7 +217,7 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
         // SVCM
 
         // ITI-95 Query Value Set
-        var pathItem = getPathItem(getTerminologyTagName(CONFORMANCE),"ValueSet", "Value Set", "url" , "https://fhir.nhs.uk/ValueSet/NHSDigital-MedicationRequest-Code",
+        var pathItem = getPathItem(getTerminologyTagName(TERMINOLOGY),"ValueSet", "Value Set", "url" , "https://fhir.nhs.uk/ValueSet/NHSDigital-MedicationRequest-Code",
         "This transaction is used by the Terminology Consumer to find value sets based on criteria it\n" +
                 "provides in the query parameters of the request message, or to retrieve a specific value set. The\n" +
                 "request is received by the Terminology Repository. The Terminology Repository processes the\n" +
@@ -221,7 +226,7 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
 
         // ITI 96 Query Code System
 
-        pathItem = getPathItem(getTerminologyTagName(CONFORMANCE),"CodeSystem", "Code System", "url", "https://fhir.nhs.uk/CodeSystem/NHSD-API-ErrorOrWarningCode",
+        pathItem = getPathItem(getTerminologyTagName(TERMINOLOGY),"CodeSystem", "Code System", "url", "https://fhir.nhs.uk/CodeSystem/NHSD-API-ErrorOrWarningCode",
         "This transaction is used by the Terminology Consumer to solicit information about code systems " +
                 "whose data match data provided in the query parameters on the request message. The request is " +
                 "received by the Terminology Repository. The Terminology Repository processes the request and " +
@@ -452,7 +457,7 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
 
         // Query Concept Map [ITI-100]
 
-        oas.path("/FHIR/R4/ConceptMap",getPathItem(getTerminologyTagName(CONFORMANCE),"ConceptMap", "Concept Map", "url" , "https://fhir.nhs.uk/ConceptMap/eps-issue-code-to-fhir-issue-type",
+        oas.path("/FHIR/R4/ConceptMap",getPathItem(getTerminologyTagName(TERMINOLOGY),"ConceptMap", "Concept Map", "url" , "https://fhir.nhs.uk/ConceptMap/eps-issue-code-to-fhir-issue-type",
             "This transaction is used by the Terminology Consumer that supports the Translate Option to " +
                     "solicit information about concept maps whose data match data provided in the query parameters " +
                     "on the request message. The request is received by the Terminology Repository that supports the " +

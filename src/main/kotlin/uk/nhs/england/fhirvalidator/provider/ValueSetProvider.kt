@@ -20,6 +20,7 @@ import org.hl7.fhir.r4.model.*
 import org.hl7.fhir.utilities.npm.NpmPackage
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
+import uk.nhs.england.fhirvalidator.awsProvider.AWSValueSet
 import uk.nhs.england.fhirvalidator.service.CodingSupport
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
 import java.nio.charset.StandardCharsets
@@ -27,7 +28,8 @@ import java.nio.charset.StandardCharsets
 @Component
 class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
                         private val supportChain: ValidationSupportChain,
-                        private val codingSupport: CodingSupport
+                        private val codingSupport: CodingSupport,
+        private val awsValueSet: AWSValueSet
 ) : IResourceProvider {
     /**
      * The getResourceType method comes from IResourceProvider, and must
@@ -47,8 +49,11 @@ class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
     fun search(@RequiredParam(name = ValueSet.SP_URL) url: TokenParam): List<ValueSet> {
         val list = mutableListOf<ValueSet>()
         val resource = supportChain.fetchResource(ValueSet::class.java,java.net.URLDecoder.decode(url.value, StandardCharsets.UTF_8.name()))
-        if (resource != null) list.add(resource)
-
+        if (resource != null) {list.add(resource)
+        } else {
+            val resources = awsValueSet.search(url)
+            if (resources.size>0) list.addAll(resources)
+        }
         return list
     }
 

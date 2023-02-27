@@ -7,7 +7,6 @@ import ca.uhn.fhir.context.support.ValidationSupportContext
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException
 import ca.uhn.fhir.validation.FhirValidator
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.gson.JsonElement
 import mu.KLogging
 import org.hl7.fhir.common.hapi.validation.support.*
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator
@@ -20,11 +19,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
-import uk.nhs.england.fhirvalidator.awsProvider.AWSAuditEvent
-import uk.nhs.england.fhirvalidator.awsProvider.AWSQuestionnaire
+import uk.nhs.england.fhirvalidator.awsProvider.*
 import uk.nhs.england.fhirvalidator.model.SimplifierPackage
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
-import uk.nhs.england.fhirvalidator.awsProvider.AWSValidationSupport
 import uk.nhs.england.fhirvalidator.util.AccessTokenInterceptor
 import uk.nhs.england.fhirvalidator.validationSupport.SwitchedTerminologyServiceValidationSupport
 import uk.nhs.england.fhirvalidator.validationSupport.UnsupportedCodeSystemWarningValidationSupport
@@ -72,6 +69,8 @@ open class ValidationConfiguration(
         @Qualifier("R4") fhirContext: FhirContext,
         switchedTerminologyServiceValidationSupport: SwitchedTerminologyServiceValidationSupport,
         awsQuestionnaire: AWSQuestionnaire,
+        awsCodeSystem: AWSCodeSystem,
+        awsValueSet: AWSValueSet,
         awsAuditEvent: AWSAuditEvent
     ): ValidationSupportChain {
         val supportChain = ValidationSupportChain(
@@ -79,7 +78,7 @@ open class ValidationConfiguration(
             SnapshotGeneratingValidationSupport(fhirContext),
             CommonCodeSystemsTerminologyService(fhirContext),
             switchedTerminologyServiceValidationSupport,
-            AWSValidationSupport(fhirContext, awsQuestionnaire)
+            AWSValidationSupport(fhirContext, awsQuestionnaire,awsCodeSystem,awsValueSet)
         )
         getPackages()
         if (npmPackages != null) {

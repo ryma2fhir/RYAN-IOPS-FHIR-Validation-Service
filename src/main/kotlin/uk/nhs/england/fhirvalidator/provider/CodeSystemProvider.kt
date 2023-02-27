@@ -12,6 +12,7 @@ import org.hl7.fhir.r4.model.*
 import org.hl7.fhir.utilities.npm.NpmPackage
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
+import uk.nhs.england.fhirvalidator.awsProvider.AWSCodeSystem
 import uk.nhs.england.fhirvalidator.service.CodingSupport
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
 import uk.nhs.england.fhirvalidator.shared.LookupCodeResultUK
@@ -21,7 +22,8 @@ import java.nio.charset.StandardCharsets
 class CodeSystemProvider (@Qualifier("R4") private val fhirContext: FhirContext,
                           private val supportChain: ValidationSupportChain,
                           private val codingSupport: CodingSupport,
-                        private val validationSupportContext: ValidationSupportContext
+                        private val validationSupportContext: ValidationSupportContext,
+    private val awsCodeSystem: AWSCodeSystem
 ) : IResourceProvider {
     /**
      * The getResourceType method comes from IResourceProvider, and must
@@ -44,6 +46,9 @@ class CodeSystemProvider (@Qualifier("R4") private val fhirContext: FhirContext,
         if (resource != null) {
             if (resource.id == null) resource.setId(decodeUri)
             list.add(resource)
+        } else {
+            val resources = awsCodeSystem.search(url)
+            if (resources.size>0) list.addAll(resources)
         }
 
         return list
