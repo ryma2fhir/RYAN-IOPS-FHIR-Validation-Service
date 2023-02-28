@@ -8,7 +8,7 @@ aws --profile kevin.mayfield1 sts get-session-token --serial-number arn:aws:iam:
 
 aws configure --profile default set aws_access_key_id {from above}
 aws configure --profile default set aws_secret_access_key {from above}
-
+aws configure --profile default set aws_session_token
 
 Then run
 
