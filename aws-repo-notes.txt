@@ -8,7 +8,7 @@ aws --profile kevin.mayfield1 sts get-session-token --serial-number arn:aws:iam:
 
 aws configure --profile default set aws_access_key_id {from above}
 aws configure --profile default set aws_secret_access_key {from above}
-aws configure --profile default set aws_session_token
+
 
 Then run
 
@@ -23,11 +23,11 @@ mvn clean install
 docker build -t fhir-validator-r4 .
 
 docker tag fhir-validator-r4:latest 365027538941.dkr.ecr.eu-west-2.amazonaws.com/fhir-validator-r4:latest
-docker tag fhir-validator-r4:latest 365027538941.dkr.ecr.eu-west-2.amazonaws.com/fhir-validator-r4:2.8.5
+docker tag fhir-validator-r4:latest 365027538941.dkr.ecr.eu-west-2.amazonaws.com/fhir-validator-r4:2.8.6
 
 docker push 365027538941.dkr.ecr.eu-west-2.amazonaws.com/fhir-validator-r4:latest
 
-docker push 365027538941.dkr.ecr.eu-west-2.amazonaws.com/fhir-validator-r4:2.8.5
+docker push 365027538941.dkr.ecr.eu-west-2.amazonaws.com/fhir-validator-r4:2.8.6
 
 
 

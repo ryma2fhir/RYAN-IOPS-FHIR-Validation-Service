@@ -71,14 +71,15 @@ open class ValidationConfiguration(
         awsQuestionnaire: AWSQuestionnaire,
         awsCodeSystem: AWSCodeSystem,
         awsValueSet: AWSValueSet,
-        awsAuditEvent: AWSAuditEvent
+        awsAuditEvent: AWSAuditEvent,
+        awsConceptMap: AWSConceptMap
     ): ValidationSupportChain {
         val supportChain = ValidationSupportChain(
             DefaultProfileValidationSupport(fhirContext),
             SnapshotGeneratingValidationSupport(fhirContext),
             CommonCodeSystemsTerminologyService(fhirContext),
             switchedTerminologyServiceValidationSupport,
-            AWSValidationSupport(fhirContext, awsQuestionnaire,awsCodeSystem,awsValueSet)
+            AWSValidationSupport(fhirContext, awsQuestionnaire,awsCodeSystem,awsValueSet, awsConceptMap)
         )
         getPackages()
         if (npmPackages != null) {
