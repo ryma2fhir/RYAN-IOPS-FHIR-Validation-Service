@@ -10,17 +10,20 @@ import org.hl7.fhir.instance.model.api.IBaseResource
 
 class AWSValidationSupport(theFhirContext: FhirContext?, _awsQuestionnaire: AWSQuestionnaire?,
     _awsCodeSystem: AWSCodeSystem,
-    _awsValueSet: AWSValueSet) : BaseValidationSupport(theFhirContext), IValidationSupport {
+    _awsValueSet: AWSValueSet,
+    _awsConceptMap: AWSConceptMap) : BaseValidationSupport(theFhirContext), IValidationSupport {
 
     private var awsQuestionnaire: AWSQuestionnaire? = null
     private var awsValueSet: AWSValueSet? = null
     private var awsCodeSystem: AWSCodeSystem? = null
+    private var awsConceptMap: AWSConceptMap? = null
     companion object : KLogging()
 
    init {
        awsQuestionnaire = _awsQuestionnaire
        awsCodeSystem = _awsCodeSystem
        awsValueSet = _awsValueSet
+       awsConceptMap = _awsConceptMap
    }
 
 
@@ -36,6 +39,8 @@ class AWSValidationSupport(theFhirContext: FhirContext?, _awsQuestionnaire: AWSQ
             for (codeSystem in codeSystems) retVal.add(codeSystem)
             val valueSets = awsValueSet!!.search(null)
             for (valueSet in valueSets) retVal.add(valueSet)
+            val conceptMaps = awsConceptMap!!.search(null)
+            for (conceptMap in conceptMaps) retVal.add(conceptMap)
         } catch (ex : Exception) {
             logger.error(ex.message)
             return retVal;
@@ -56,6 +61,10 @@ class AWSValidationSupport(theFhirContext: FhirContext?, _awsQuestionnaire: AWSQ
                 }
                 if (theClass.simpleName.equals("ValueSet")) {
                     val found = awsValueSet!!.search(TokenParam().setValue(theUri))
+                    return if (found.size > 0) found[0] as T else null
+                }
+                if (theClass.simpleName.equals("ConceptMap")) {
+                    val found = awsConceptMap!!.search(TokenParam().setValue(theUri))
                     return if (found.size > 0) found[0] as T else null
                 }
             }
