@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.api.MethodOutcome
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import ca.uhn.fhir.rest.param.TokenParam
+import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException
 import org.hl7.fhir.instance.model.api.IBaseBundle
 import org.hl7.fhir.r4.model.*
 import org.slf4j.LoggerFactory
@@ -84,6 +85,18 @@ class AWSQuestionnaire(val awsClient: IGenericClient,
     }
 
     fun create(questionnaire: Questionnaire): MethodOutcome? {
+        if (questionnaire.hasCode() && !questionnaire.hasIdentifier()) {
+            questionnaire.identifier.add(Identifier()
+                .setSystem(questionnaire.codeFirstRep.system)
+                .setValue(questionnaire.codeFirstRep.code))
+        }
+        if (questionnaire.hasCode() && questionnaire.codeFirstRep.hasCode() && !questionnaire.hasUrl()) {
+            questionnaire.url = "https://example.fhir.nhs.uk/Questionnaire/"+questionnaire.codeFirstRep.code
+        }
+        if (!questionnaire.hasUrl()) throw UnprocessableEntityException("A Questionnaire.code or Questionnaire.url is required")
+        val duplicateCheck = search(TokenParam().setValue(questionnaire.url))
+        if (duplicateCheck.size>0) throw UnprocessableEntityException("A Questionnaire with this definition alrady exists.")
+
         var response: MethodOutcome? = null
         var retry = 3
         while (retry > 0) {
