@@ -26,12 +26,13 @@ import javax.servlet.http.HttpServletRequest
 class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirContext,
                              private val cognitoAuthInterceptor: CognitoAuthInterceptor,
     private val awsQuestionnaire: AWSQuestionnaire
-) : IResourceProvider {
+) :IResourceProvider {
     /**
      * The getResourceType method comes from IResourceProvider, and must
      * be overridden to indicate what type of resource this provider
      * supplies.
      */
+
     override fun getResourceType(): Class<Questionnaire> {
         return Questionnaire::class.java
     }
@@ -40,53 +41,11 @@ class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirConte
 
     companion object : KLogging()
 
-    @Search
-    fun search(httpRequest : HttpServletRequest,
-               @OptionalParam(name = Questionnaire.SP_CODE) code: TokenParam?,
-                @OptionalParam(name = Questionnaire.SP_URL) url: TokenParam?,
-               @OptionalParam(name = Questionnaire.SP_CONTEXT) context: TokenParam?,
-               @OptionalParam(name = Questionnaire.SP_DATE) date: DateParam?,
-               @OptionalParam(name = Questionnaire.SP_IDENTIFIER) identifier: TokenParam?,
-               @OptionalParam(name = Questionnaire.SP_PUBLISHER) publisher: StringParam?,
-               @OptionalParam(name = Questionnaire.SP_STATUS) status: TokenParam?,
-               @OptionalParam(name = Questionnaire.SP_TITLE) title: StringParam?,
-               @OptionalParam(name = Questionnaire.SP_VERSION) version: TokenParam?,
-               @OptionalParam(name = Questionnaire.SP_DEFINITION) definition: TokenParam?,
-    ): List<Questionnaire> {
-        /*
-        code	SHALL	token
-context	SHALL	token
-date	SHALL	date
-identifier	SHALL	token
-publisher	SHALL	string
-status	SHALL	token
-title	SHALL	string
-version	SHALL	token
-definition	SHALL	token
-         */
-        val questionnaires = mutableListOf<Questionnaire>()
 
-        val resource: Resource? = cognitoAuthInterceptor.readFromUrl(httpRequest.pathInfo, httpRequest.queryString)
-        if (resource != null && resource is Bundle) {
-            for (entry in resource.entry) {
-                if (entry.hasResource() && entry.resource is Questionnaire) questionnaires.add(entry.resource as Questionnaire)
-            }
-        }
-        return questionnaires
-    }
-
-    @Delete
-    fun delete(
-        theRequest: HttpServletRequest,
-        @IdParam theId: IdType,
-        theRequestDetails: RequestDetails?
-    ): MethodOutcome? {
-        return awsQuestionnaire.delete(theId)
-    }
 
     @Read
     fun read(httpRequest : HttpServletRequest, @IdParam internalId: IdType): Questionnaire? {
-        val resource: Resource? = cognitoAuthInterceptor.readFromUrl(httpRequest.pathInfo, null)
+        val resource: Resource? = cognitoAuthInterceptor.readFromUrl(httpRequest.pathInfo, null,"Questionnaire")
         return if (resource is Questionnaire) resource else null
     }
 

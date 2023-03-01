@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import ca.uhn.fhir.rest.client.api.IHttpRequest
 import ca.uhn.fhir.rest.client.api.IHttpResponse
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder
@@ -19,6 +20,7 @@ import org.json.JSONObject
 import org.json.JSONTokener
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
+import uk.nhs.england.fhirvalidator.configuration.FHIRServerProperties
 import uk.nhs.england.fhirvalidator.configuration.MessageProperties
 import uk.nhs.england.fhirvalidator.model.ResponseObject
 import java.io.BufferedReader
@@ -30,7 +32,9 @@ import java.net.URL
 import java.util.*
 
 @Component
-class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifier("R4") val ctx : FhirContext) : IClientInterceptor {
+class CognitoAuthInterceptor(val messageProperties: MessageProperties,
+                             val fhirServerProperties: FHIRServerProperties,
+                             @Qualifier("R4") val ctx : FhirContext) : IClientInterceptor {
 
     var authenticationResult: AuthenticationResultType? = null
 
@@ -72,9 +76,8 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifie
         authenticationResult = result.getAuthenticationResult()
         return authenticationResult
     }
-
     @Throws(Exception::class)
-    fun readFromUrl(path: String, queryParams: String?): Resource? {
+    fun readFromUrl(path: String, queryParams: String?, resourceName: String?): Resource? {
         val responseObject = ResponseObject()
         val url = messageProperties.getCdrFhirServer()
         var myUrl: URL? = null
@@ -83,8 +86,6 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifie
         } else {
             URL(url + path)
         }
-        val conn = myUrl.openConnection() as HttpURLConnection
-
         var retry = 2
         while (retry > 0) {
             val conn = myUrl.openConnection() as HttpURLConnection
@@ -104,10 +105,17 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifie
                     val resource = ctx.newJsonParser().parseResource(IOUtils.toString(rd)) as Resource
 
                     if (resource is Bundle) {
-                        val bundle = resource
-                        if (bundle.hasEntry()) {
-                            for (entryComponent in bundle.entry) {
-
+                        for (entry in resource.entry) {
+                            entry.fullUrl = fhirServerProperties.server.baseUrl + "/FHIR/R4/"+entry.resource.javaClass.simpleName + "/"+entry.resource.idElement.idPart
+                        }
+                        for (link in resource.link) {
+                            if (link.hasUrl() && resourceName!=null) {
+                                val str= link.url.split(resourceName)
+                                if (str.size>1) {
+                                    link.url = fhirServerProperties.server.baseUrl + "/FHIR/R4/" + resourceName + str[1]
+                                } else {
+                                    link.url = fhirServerProperties.server.baseUrl + "/FHIR/R4/" + resourceName
+                                }
                             }
                         }
                     }
@@ -117,15 +125,16 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifie
                 }
             } catch (ex: FileNotFoundException) {
                 retry--
-                null
+                throw ResourceNotFoundException(ex.message)
             } catch (ex: Exception) {
                 retry--
                 if (ex.message != null) {
                     if (ex.message!!.contains("401") || ex.message!!.contains("403")) {
-                        this.authenticationResult = null
-                        if (retry < 1) throw UnprocessableEntityException(ex.message)
-                    }
 
+                        this.authenticationResult = null
+                        if (retry < 1)
+                            throw UnprocessableEntityException(ex.message)
+                    }
                 } else {
                     throw UnprocessableEntityException(ex.message)
                 }
@@ -133,6 +142,7 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties, @Qualifie
         }
         throw UnprocessableEntityException("Number of retries exhausted")
     }
+
 
     @Throws(Exception::class)
     fun postBinaryLocation(resource : Binary): JSONObject {
