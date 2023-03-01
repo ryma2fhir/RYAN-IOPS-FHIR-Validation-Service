@@ -110,9 +110,10 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties,
                         }
                         for (link in resource.link) {
                             if (link.hasUrl() && resourceName!=null) {
-                                val str= link.url.split(resourceName)
+                                var str : MutableList<String> = link.url.split(resourceName).toMutableList()
                                 if (str.size>1) {
-                                    link.url = fhirServerProperties.server.baseUrl + "/FHIR/R4/" + resourceName + str[1]
+                                    str.removeAt(0)
+                                    link.url = fhirServerProperties.server.baseUrl + "/FHIR/R4/" + resourceName + str.joinToString(resourceName)
                                 } else {
                                     link.url = fhirServerProperties.server.baseUrl + "/FHIR/R4/" + resourceName
                                 }
