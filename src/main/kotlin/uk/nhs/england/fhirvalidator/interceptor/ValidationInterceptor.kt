@@ -17,6 +17,7 @@ import org.hl7.fhir.r4.model.Resource
 import org.slf4j.LoggerFactory
 import uk.nhs.england.fhirvalidator.configuration.MessageProperties
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -135,7 +136,24 @@ class ValidationInterceptor(val ctx : FhirContext, val messageProperties: Messag
                 } finally {
                     `is`.close()
                 }
-            } catch (ex: Exception) {
+            }
+            catch (ex : IOException) {
+                val `is` = InputStreamReader(conn.errorStream)
+                try {
+                    val rd = BufferedReader(`is`)
+                    val postedResource: Resource = ctx.newJsonParser().parseResource(IOUtils.toString(rd)) as Resource
+                    if (postedResource != null && postedResource is Resource) {
+                        method.resource = postedResource
+                    }
+                    return method
+                }
+                catch (exOther: Exception) {
+                        throw ex
+                    } finally {
+                        `is`.close()
+                    }
+                }
+            catch (ex: Exception) {
                 retry--
                 if (ex.message != null) {
                     if (ex.message!!.contains("401") || ex.message!!.contains("403")) {

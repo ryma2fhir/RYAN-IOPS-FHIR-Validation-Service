@@ -95,7 +95,7 @@ class AWSQuestionnaire(val awsClient: IGenericClient,
         }
         if (!questionnaire.hasUrl()) throw UnprocessableEntityException("A Questionnaire.code or Questionnaire.url is required")
         val duplicateCheck = search(TokenParam().setValue(questionnaire.url))
-        if (duplicateCheck.size>0) throw UnprocessableEntityException("A Questionnaire with this definition alrady exists.")
+        if (duplicateCheck.size>0) throw UnprocessableEntityException("A Questionnaire with this definition already exists.")
 
         var response: MethodOutcome? = null
         var retry = 3
