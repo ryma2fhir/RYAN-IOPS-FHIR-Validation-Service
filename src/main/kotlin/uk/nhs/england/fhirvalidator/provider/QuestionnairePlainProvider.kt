@@ -45,22 +45,7 @@ class QuestionnairePlainProvider (@Qualifier("R4") private val fhirContext: Fhir
         @OptionalParam(name = Questionnaire.SP_VERSION) version: TokenParam?,
         @OptionalParam(name = Questionnaire.SP_DEFINITION) definition: TokenParam?,
     ): Bundle? {
-/*
-        val questionnaires = mutableListOf<Questionnaire>()
-        if (httpRequest.queryString != null) {
-            val params: List<String> = httpRequest.queryString.split("&")
-            val newParams = mutableListOf<String>()
-            for (param in params) {
-                val name: String = param.split("=").get(0)
-                var value: String = param.split("=").get(1)
-                if (name.equals("url")) {
-                    value = java.net.URLDecoder.decode(value, StandardCharsets.UTF_8.name());
-                    newParams.add(name + "=" + value)
-                } else {
-                    newParams.add(param)
-                }
-            }
-        }*/
+
         val resource: Resource? = cognitoAuthInterceptor.readFromUrl(httpRequest.pathInfo, httpRequest.queryString,"Questionnaire")
         if (resource != null && resource is Bundle) {
             return resource

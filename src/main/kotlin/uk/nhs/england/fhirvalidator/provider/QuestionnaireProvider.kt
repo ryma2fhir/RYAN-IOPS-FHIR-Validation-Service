@@ -62,4 +62,9 @@ class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirConte
     fun create(theRequest: HttpServletRequest, @ResourceParam questionnaire: Questionnaire): MethodOutcome? {
         return awsQuestionnaire.create(questionnaire)
     }
+
+    @Delete
+    fun create(theRequest: HttpServletRequest,  @IdParam theId: IdType): MethodOutcome? {
+        return awsQuestionnaire.delete(theId)
+    }
 }
