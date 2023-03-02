@@ -56,7 +56,6 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
                         )
                     .termsOfService("http://swagger.io/terms/")
                     .license(License().name("Apache 2.0").url("http://springdoc.org"))
-                    .license(License().name("Apache 2.0").url("http://springdoc.org"))
             )
         oas.addServersItem(
             Server().description(fhirServerProperties.server.name).url(fhirServerProperties.server.baseUrl)
