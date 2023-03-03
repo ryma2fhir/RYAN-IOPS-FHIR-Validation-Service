@@ -68,7 +68,11 @@ class AWSAuditEventLoggingInterceptor(
                         if (baseResource is QuestionnaireResponse) {
                             patientId = baseResource.subject.reference
                         }
-                    } finally {
+                    }  catch(ex: Exception) {
+                    val auditEvent =
+                        createAudit(theRequestDetails.servletRequest, fhirResourceName, patientId, fhirResource)
+                    addAWSOutComeException(auditEvent, ex)
+                    // throw UnprocessableEntityException(ex.message)
                     }
                 }
             }
@@ -118,8 +122,11 @@ class AWSAuditEventLoggingInterceptor(
                             if (baseResource is QuestionnaireResponse) {
                                 patientId = baseResource.subject.reference
                             }
-                        } catch (finalEx : Exception) {
-
+                        } catch(ex: Exception) {
+                            val auditEvent =
+                                createAudit(theRequestDetails.servletRequest, fhirResourceName, patientId, fhirResource)
+                            addAWSOutComeException(auditEvent, ex)
+                            // throw UnprocessableEntityException(ex.message)
                         }
                     }
                 }
