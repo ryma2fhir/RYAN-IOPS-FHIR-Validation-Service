@@ -83,6 +83,9 @@ class SwitchedTerminologyServiceValidationSupport(
         VerifyController.logger.info("Switched validation expansion called")
         val outcome = default.expandValueSet(theValidationSupportContext, theExpansionOptions, theValueSetToExpand)
         if (outcome != null && outcome.error == null) return outcome
+        if (outcome != null && outcome.error !== null) {
+            VerifyController.logger.info(outcome.error)
+        }
         return override.expandValueSet(theValidationSupportContext, theExpansionOptions, theValueSetToExpand)
     }
 

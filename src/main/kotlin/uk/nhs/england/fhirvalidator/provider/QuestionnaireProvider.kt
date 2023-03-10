@@ -37,8 +37,6 @@ class QuestionnaireProvider (@Qualifier("R4") private val fhirContext: FhirConte
         return Questionnaire::class.java
     }
 
-    var implementationGuideParser: ImplementationGuideParser? = ImplementationGuideParser(fhirContext)
-
     companion object : KLogging()
 
 

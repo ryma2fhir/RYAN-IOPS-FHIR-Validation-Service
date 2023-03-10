@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.api.MethodOutcome
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import ca.uhn.fhir.rest.param.TokenParam
+import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException
 import org.hl7.fhir.instance.model.api.IBaseBundle
 import org.hl7.fhir.r4.model.*
 import org.slf4j.LoggerFactory
@@ -85,6 +86,10 @@ class AWSValueSet(val awsClient: IGenericClient,
 
     fun create(valueSet: ValueSet): MethodOutcome? {
         var response: MethodOutcome? = null
+        if (!valueSet.hasUrl()) throw UnprocessableEntityException("ValueSet.url is required")
+        val duplicateCheck = search(TokenParam().setValue(valueSet.url))
+        if (duplicateCheck.size>0) throw UnprocessableEntityException("A ValueSet with this definition already exists.")
+
         var retry = 3
         while (retry > 0) {
             try {

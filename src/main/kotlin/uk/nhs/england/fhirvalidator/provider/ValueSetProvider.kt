@@ -8,6 +8,8 @@ import ca.uhn.fhir.context.support.IValidationSupport.ValueSetExpansionOutcome
 import ca.uhn.fhir.context.support.ValidationSupportContext
 import ca.uhn.fhir.context.support.ValueSetExpansionOptions
 import ca.uhn.fhir.rest.annotation.*
+import ca.uhn.fhir.rest.api.MethodOutcome
+import ca.uhn.fhir.rest.api.server.RequestDetails
 import ca.uhn.fhir.rest.param.DateParam
 import ca.uhn.fhir.rest.param.StringParam
 import ca.uhn.fhir.rest.param.TokenParam
@@ -21,15 +23,18 @@ import org.hl7.fhir.utilities.npm.NpmPackage
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import uk.nhs.england.fhirvalidator.awsProvider.AWSValueSet
+import uk.nhs.england.fhirvalidator.interceptor.CognitoAuthInterceptor
 import uk.nhs.england.fhirvalidator.service.CodingSupport
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
 import java.nio.charset.StandardCharsets
+import javax.servlet.http.HttpServletRequest
 
 @Component
 class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
                         private val supportChain: ValidationSupportChain,
                         private val codingSupport: CodingSupport,
-        private val awsValueSet: AWSValueSet
+                        private val awsValueSet: AWSValueSet,
+                        private val cognitoAuthInterceptor: CognitoAuthInterceptor
 ) : IResourceProvider {
     /**
      * The getResourceType method comes from IResourceProvider, and must
@@ -41,10 +46,32 @@ class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
     }
     private val validationSupportContext = ValidationSupportContext(supportChain)
 
-    var implementationGuideParser: ImplementationGuideParser? = ImplementationGuideParser(fhirContext)
-
     companion object : KLogging()
 
+    @Update
+    fun update(
+        theRequest: HttpServletRequest,
+        @ResourceParam valueSet: ValueSet,
+        @IdParam theId: IdType,
+        theRequestDetails: RequestDetails?
+    ): MethodOutcome? {
+        return awsValueSet.update(valueSet, theId)
+    }
+    @Create
+    fun create(theRequest: HttpServletRequest, @ResourceParam valueSet: ValueSet): MethodOutcome? {
+        return awsValueSet.create(valueSet)
+    }
+
+    @Read
+    fun read(httpRequest : HttpServletRequest, @IdParam internalId: IdType): ValueSet? {
+        val resource: Resource? = cognitoAuthInterceptor.readFromUrl(httpRequest.pathInfo, null,"ValueSet")
+        return if (resource is ValueSet) resource else null
+    }
+
+    @Delete
+    fun create(theRequest: HttpServletRequest, @IdParam theId: IdType): MethodOutcome? {
+        return awsValueSet.delete(theId)
+    }
     @Search
     fun search(@RequiredParam(name = ValueSet.SP_URL) url: TokenParam): List<ValueSet> {
         val list = mutableListOf<ValueSet>()

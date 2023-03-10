@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.api.MethodOutcome
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import ca.uhn.fhir.rest.param.TokenParam
+import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException
 import org.hl7.fhir.instance.model.api.IBaseBundle
 import org.hl7.fhir.r4.model.*
 import org.slf4j.LoggerFactory
@@ -85,6 +86,11 @@ class AWSCodeSystem(val awsClient: IGenericClient,
 
     fun create(codeSystem: CodeSystem): MethodOutcome? {
         var response: MethodOutcome? = null
+
+        if (!codeSystem.hasUrl()) throw UnprocessableEntityException("CodeSystem.url is required")
+        val duplicateCheck = search(TokenParam().setValue(codeSystem.url))
+        if (duplicateCheck.size>0) throw UnprocessableEntityException("A CodeSystem with this definition already exists.")
+
         var retry = 3
         while (retry > 0) {
             try {
