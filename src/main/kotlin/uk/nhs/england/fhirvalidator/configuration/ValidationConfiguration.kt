@@ -249,46 +249,57 @@ open class ValidationConfiguration(
     open fun downloadPackage(name : String, version : String) : List<NpmPackage> {
         logger.info("Downloading from AWS Cache {} - {}",name, version)
         // Try self first
-        var inputStream : InputStream
+        var inputStream : InputStream? = null;
         try {
             val packUrl =  "https://fhir.nhs.uk/ImplementationGuide/" + name+"-" + version
             inputStream = readFromUrl(messageProperties.getNPMFhirServer() + "/FHIR/R4/ImplementationGuide/\$package?url="+packUrl )
+            logger.info("Found Package on AWS Cache {} - {}",name,version)
         } catch (ex : Exception) {
-            logger.info("Package not found in AWS Cache trying simplifier "+name+ "-"+version)
+            logger.warn("Package not found in AWS Cache trying simplifier {} - {}",name,version)
             if (ex.message!=null) logger.info(ex.message)
-            inputStream = readFromUrl("https://packages.simplifier.net/" + name + "/" + version)
+            try {
+                inputStream = readFromUrl("https://packages.simplifier.net/" + name + "/" + version)
+                logger.info("Found Package on Simplifier {} - {}",name,version)
+            } catch (exSimplifier: Exception) {
+                logger.error("Package not found on simplifier {} - {}",name, version)
+            }
         }
-        if (inputStream == null) logger.info("Failed to download  {} - {}",name, version)
+        if (inputStream == null) logger.error("Failed to download  {} - {}",name, version)
         val packages = arrayListOf<NpmPackage>()
         val npmPackage = NpmPackage.fromPackage(inputStream)
 
         val dependency= npmPackage.npm.get("dependencies")
 
-        if (dependency.isJsonArray) logger.info("isJsonArray")
-        if (dependency.isJsonObject) {
-            val obj = dependency.asJsonObject()
-            obj.properties
-            val entrySet: MutableList<JsonProperty>? = obj.properties
-
-            entrySet?.forEach()
-            {
-                logger.info(it.name + " version =  " + it.value)
-                if (it.name != "hl7.fhir.r4.core") {
-                    val entryVersion = it.value?.asString()?.replace("\"","")
-                    if (it.name != null && entryVersion != null) {
-                        val packs = downloadPackage(it.name!!, entryVersion)
-                        if (packs.size > 0) {
-                            for (pack in packs) {
-                                packages.add(pack)
+        if (dependency !== null) {
+            if (dependency.isJsonArray) logger.info("isJsonArray")
+            if (dependency.isJsonObject) {
+                val obj = dependency.asJsonObject()
+                obj.properties
+                val entrySet: MutableList<JsonProperty>? = obj.properties
+                entrySet?.forEach()
+                {
+                    logger.info(it.name + " version =  " + it.value)
+                    if (it.name != "hl7.fhir.r4.core") {
+                        val entryVersion = it.value?.asString()?.replace("\"","")
+                        if (it.name != null && entryVersion != null) {
+                            val packs = downloadPackage(it.name!!, entryVersion)
+                            if (packs.size > 0) {
+                                for (pack in packs) {
+                                    packages.add(pack)
+                                }
                             }
                         }
                     }
                 }
             }
+            if (dependency.isJsonNull) logger.info("isNull")
+            if (dependency.isJsonPrimitive) logger.info("isJsonPrimitive")
+        } else {
+            logger.info("No dependencies found for {} - {}",name,version)
         }
+
         packages.add(npmPackage)
-        if (dependency.isJsonNull) logger.info("isNull")
-        if (dependency.isJsonPrimitive) logger.info("isJsonPrimitive")
+
 
         return packages
     }
