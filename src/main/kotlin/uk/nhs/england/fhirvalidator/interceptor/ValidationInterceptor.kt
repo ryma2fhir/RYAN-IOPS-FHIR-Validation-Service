@@ -37,7 +37,7 @@ class ValidationInterceptor(val ctx : FhirContext, val messageProperties: Messag
     fun incomingRequest(request: HttpServletRequest, requestDetails: RequestDetails?, resource: IBaseResource?) :Boolean {
 
         // Don't validate validate!
-        if ((request.method.equals("POST") || request.method.equals("PUT")) && !request.pathInfo.endsWith("validate") ) {
+        if ((request.method.equals("POST") || request.method.equals("PUT")) && !request.pathInfo.startsWith("/$") ) {
             val encoding = RestfulServerUtils.determineRequestEncodingNoDefault(requestDetails)
             if (encoding == null) {
                 log.trace("Incoming request does not appear to be FHIR, not going to validate")

@@ -132,17 +132,15 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties,
                     if (ex.message!!.contains("401") || ex.message!!.contains("403")) {
 
                         this.authenticationResult = null
-                        if (retry < 1)
-                            throw UnprocessableEntityException(ex.message)
                     }
-                } else {
-                    throw UnprocessableEntityException(ex.message)
+                }
+                if (retry == 0) {
+                    throw ResourceNotFoundException(getErrorStreamMessage(conn, ex))
                 }
             }
         }
         throw UnprocessableEntityException("Number of retries exhausted")
     }
-
 
     @Throws(Exception::class)
     fun postBinaryLocation(resource : Binary): JSONObject {
@@ -306,6 +304,27 @@ class CognitoAuthInterceptor(val messageProperties: MessageProperties,
         } catch (ex: Exception) {
             throw UnprocessableEntityException(ex.message)
         }
+    }
+
+    private fun getErrorStreamMessage(conn: HttpURLConnection, ex: Exception) : String? {
+        if (conn.errorStream == null) {
+            if (ex.message == null) return "Unknown Error"
+            return ex.message
+        }
+        val `is` = InputStreamReader(conn.errorStream)
+        try {
+            val rd = BufferedReader(`is`)
+            val resource: Resource = ctx.newJsonParser().parseResource(IOUtils.toString(rd)) as Resource
+            if (resource != null && resource is org.hl7.fhir.r4.model.OperationOutcome) {
+                return resource.issueFirstRep.diagnostics
+            }
+        }
+        catch (exOther: Exception) {
+            throw ex
+        } finally {
+            `is`.close()
+        }
+        return ex.message
     }
 
 }

@@ -229,6 +229,7 @@ public class PrePopulatedValidationSupport extends BaseStaticResourceValidationS
 
     @Override
     public <T extends IBaseResource> List<T> fetchAllStructureDefinitions() {
+
         return toList(myStructureDefinitions);
     }
 
@@ -244,6 +245,7 @@ public class PrePopulatedValidationSupport extends BaseStaticResourceValidationS
 
     @Override
     public IBaseResource fetchStructureDefinition(String theUrl) {
+
         return myStructureDefinitions.get(theUrl);
     }
 

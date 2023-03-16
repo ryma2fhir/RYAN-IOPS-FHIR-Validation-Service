@@ -10,6 +10,7 @@ import ca.uhn.fhir.rest.param.UriParam
 import ca.uhn.fhir.rest.server.IResourceProvider
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException
 import ca.uhn.fhir.validation.FhirValidator
+import mu.KLogging
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain
 import org.hl7.fhir.r4.model.StructureDefinition
 import org.hl7.fhir.utilities.npm.NpmPackage
@@ -29,6 +30,8 @@ class StructureDefinitionProvider (
      * be overridden to indicate what type of resource this provider
      * supplies.
      */
+
+    companion object : KLogging()
     override fun getResourceType(): Class<StructureDefinition> {
         return StructureDefinition::class.java
     }

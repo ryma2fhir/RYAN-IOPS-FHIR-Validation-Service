@@ -173,7 +173,11 @@ class ValidateR4Provider (
         }
 
         if (inputResource is Bundle
-            && inputResource.type == Bundle.BundleType.SEARCHSET) {
+            && (
+                    inputResource.type == Bundle.BundleType.SEARCHSET ||
+                            inputResource.type == Bundle.BundleType.TRANSACTION ||
+                            inputResource.type == Bundle.BundleType.COLLECTION
+                    )) {
             val bundleEntries = inputResource.entry
                 .map { it }
             val bundleResources = bundleEntries.map { it.resource }

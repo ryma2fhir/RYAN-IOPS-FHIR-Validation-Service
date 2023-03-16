@@ -14,16 +14,17 @@ import java.io.InputStream
 
 @Service
 class ImplementationGuideParser(@Qualifier("R4") private val fhirContext: FhirContext) {
-    fun createPrePopulatedValidationSupport(npmPackage: NpmPackage): uk.nhs.england.fhirvalidator.shared.PrePopulatedValidationSupport {
+    fun createPrePopulatedValidationSupport(npmPackage: NpmPackage): PrePopulatedValidationSupport {
         val prePopulatedSupport =
-            uk.nhs.england.fhirvalidator.shared.PrePopulatedValidationSupport(fhirContext)
+            PrePopulatedValidationSupport(fhirContext)
         getResourcesFromPackage(npmPackage).forEach(prePopulatedSupport::addResource)
         return prePopulatedSupport
     }
 
     fun getResourcesFromPackage(npmPackage: NpmPackage): List<IBaseResource> {
-        return getResourcesFromFolder(npmPackage, "package")
+        val list = getResourcesFromFolder(npmPackage, "package")
             .plus(getResourcesFromFolder(npmPackage, "examples"))
+        return list;
     }
 
     fun getResourcesFromFolder(npmPackage: NpmPackage, folderName: String): List<IBaseResource> {
@@ -42,7 +43,7 @@ class ImplementationGuideParser(@Qualifier("R4") private val fhirContext: FhirCo
     }
     fun parseResource(jsonParser: IParser, it : InputStream?): IBaseResource {
         try {
-            jsonParser.parseResource(it)
+            return jsonParser.parseResource(it)
         } catch (ex: Exception) {
             ValidationConfiguration.logger.error(ex.message)
         }
