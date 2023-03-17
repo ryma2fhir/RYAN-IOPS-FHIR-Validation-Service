@@ -31,6 +31,7 @@ open class MessageProperties {
     val AWS_API_KEY = "aws.apiKey"
 
     val AWS_QUEUE_NAME = "aws.queueName"
+    val AWS_QUEUE_ENABLED = "aws.queueEnabled"
     val CDR_FHIR_SERVER = "cdr.fhirServer"
     val NPM_FHIR_SERVER = "npm.fhirServer"
     val VALIDATION_FHIR_SERVER = "validation.fhirServer"
@@ -117,7 +118,7 @@ open class MessageProperties {
         return defaultValue
     }
 
-    private fun getPropertyBoolean(propertyName: String, defaultValue: Boolean): Boolean? {
+    private fun getPropertyBoolean(propertyName: String, defaultValue: Boolean): Boolean {
         val value: String? = getProperty(propertyName)
         return if (value == null || value.length == 0) {
             defaultValue
@@ -223,6 +224,9 @@ open class MessageProperties {
 
     fun getAwsQueueName(): String? {
         return getProperty(AWS_QUEUE_NAME)
+    }
+    fun getAWSQueueEnabled(): Boolean {
+        return getPropertyBoolean(AWS_QUEUE_ENABLED, false)
     }
 
     fun getAwsApiKey(): String? {
