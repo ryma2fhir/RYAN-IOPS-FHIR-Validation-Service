@@ -5,16 +5,20 @@ import ca.uhn.fhir.context.support.IValidationSupport
 import ca.uhn.fhir.interceptor.api.Hook
 import ca.uhn.fhir.interceptor.api.Interceptor
 import ca.uhn.fhir.interceptor.api.Pointcut
+import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.hl7.fhir.instance.model.api.IBaseConformance
 import org.hl7.fhir.r4.model.*
 import org.hl7.fhir.utilities.npm.NpmPackage
+import org.springframework.core.io.ClassPathResource
 import uk.nhs.england.fhirvalidator.configuration.FHIRServerProperties
+import uk.nhs.england.fhirvalidator.model.SimplifierPackage
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
 
 @Interceptor
 class CapabilityStatementInterceptor(
     fhirContext: FhirContext,
-    private val npmPackages: List<NpmPackage>,
+    val objectMapper: ObjectMapper,
     private val supportChain: IValidationSupport,
     private val fhirServerProperties: FHIRServerProperties
 ) {
@@ -30,12 +34,21 @@ class CapabilityStatementInterceptor(
         // Customize the CapabilityStatement as desired
         val apiextension = Extension();
         apiextension.url = "https://fhir.nhs.uk/StructureDefinition/Extension-NHSDigital-CapabilityStatement-Package"
-        npmPackages.forEach {
-            val packageExtension = Extension();
-            packageExtension.url="FHIRPackage"
-            packageExtension.extension.add(Extension().setUrl("name").setValue(StringType(it.name())))
-            packageExtension.extension.add(Extension().setUrl("version").setValue(StringType(it.version())))
-            apiextension.extension.add(packageExtension)
+        var manifest : Array<SimplifierPackage>? = null
+        if (fhirServerProperties.ig != null   ) {
+            manifest = arrayOf(SimplifierPackage(fhirServerProperties.ig!!.name, fhirServerProperties.ig!!.version))
+        } else {
+            val configurationInputStream = ClassPathResource("manifest.json").inputStream
+            manifest = objectMapper.readValue(configurationInputStream, Array<SimplifierPackage>::class.java)
+        }
+        if (manifest != null) {
+            manifest.forEach {
+                val packageExtension = Extension();
+                packageExtension.url="FHIRPackage"
+                packageExtension.extension.add(Extension().setUrl("name").setValue(StringType(it.packageName)))
+                packageExtension.extension.add(Extension().setUrl("version").setValue(StringType(it.version)))
+                apiextension.extension.add(packageExtension)
+            }
         }
         val packageExtension = Extension();
         packageExtension.url="openApi"
@@ -44,40 +57,55 @@ class CapabilityStatementInterceptor(
         apiextension.extension.add(packageExtension)
         cs.extension.add(apiextension)
 
-        for (npmPackage in npmPackages) {
-            if (!npmPackage.name().equals("hl7.fhir.r4.core")) {
-                for (resourceIG in supportChain.fetchAllConformanceResources()?.filterIsInstance<CapabilityStatement>()!!) {
-                    for (restComponent in resourceIG.rest) {
-                        for (component in restComponent.resource) {
 
-                            if (component.hasProfile()) {
-                                var resourceComponent = getResourceComponent(component.type, cs)
-                                if (resourceComponent != null) {
-                                    resourceComponent.type = component.type
-                                    resourceComponent.profile = component.profile
-                                }
+        for (resourceIG in supportChain.fetchAllConformanceResources()?.filterIsInstance<CapabilityStatement>()!!) {
+            for (restComponent in resourceIG.rest) {
+                for (component in restComponent.resource) {
 
-                            }
+                    if (component.hasProfile()) {
+                        var resourceComponent = getResourceComponent(component.type, cs)
+                        if (resourceComponent != null) {
+                            resourceComponent.type = component.type
+                            resourceComponent.profile = component.profile
+                        } else {
+                            // add this to CapabilityStatement to indicate profile being valiated against
+                            cs.restFirstRep.resource.add(
+                                CapabilityStatement.CapabilityStatementRestResourceComponent().setType(component.type).setProfile(component.profile)
+                            )
                         }
-                    }
-                }
-                val message = CapabilityStatement.CapabilityStatementMessagingComponent()
-                message.documentation = npmPackage.name()
-                for (resourceIG in supportChain.fetchAllConformanceResources()?.filterIsInstance<MessageDefinition>()!!) {
-                    if (resourceIG.hasUrl()) {
-                        val messageDefinition = CapabilityStatement.CapabilityStatementMessagingSupportedMessageComponent()
-                            .setDefinition(resourceIG.url)
 
-                        message.supportedMessage.add(messageDefinition)
                     }
                 }
-                if (message.supportedMessage.size>0)  cs.messaging.add(message)
             }
         }
+        val message = CapabilityStatement.CapabilityStatementMessagingComponent()
+
+        for (resourceIG in supportChain.fetchAllConformanceResources()?.filterIsInstance<MessageDefinition>()!!) {
+            if (resourceIG.hasUrl()) {
+                val messageDefinition = CapabilityStatement.CapabilityStatementMessagingSupportedMessageComponent()
+                    .setDefinition(resourceIG.url)
+
+                var found = false;
+                for (mes in message.supportedMessage) {
+                    if (mes.definition.equals(messageDefinition.definition)) found = true;
+                }
+                if (!found) message.supportedMessage.add(messageDefinition)
+            }
+        }
+        if (message.supportedMessage.size>0)  cs.messaging.add(message)
+
         for (ops in cs.restFirstRep.operation) {
             val operation = getOperationDefinition(ops.name)
             if (operation !=null) {
                 ops.definition = operation.url
+            }
+        }
+        for (resource in cs.restFirstRep.resource) {
+            for (ops in resource.operation) {
+                val operation = getOperationDefinition(ops.name)
+                if (operation != null) {
+                    ops.definition = operation.url
+                }
             }
         }
         cs.name = fhirServerProperties.server.name

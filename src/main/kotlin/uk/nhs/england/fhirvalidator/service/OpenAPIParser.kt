@@ -2132,7 +2132,7 @@ class OpenAPIParser(@Qualifier("R4") private val ctx: FhirContext,
 
     private fun getPackageCanonicalUrl(profile : String, npmPackage: NpmPackage?) : String {
         val npm= npmPackage?.npm?.get("name").toString().replace("\"","") + "@" + npmPackage?.npm?.get("version").toString().replace("\"","")
-        return "https://simplifier.net/resolve?target=simplifier&fhirVersion=R4&scope="+ npm + "&canonical="+ profile.replace("|","&#124;")
+        return " "+ npm + "&canonical="+ profile.replace("|","&#124;")
     }
     private fun getDocumentationPathNpm(profile : String, npmPackage : NpmPackage) : String {
         return getPackageCanonicalUrl(profile,npmPackage)

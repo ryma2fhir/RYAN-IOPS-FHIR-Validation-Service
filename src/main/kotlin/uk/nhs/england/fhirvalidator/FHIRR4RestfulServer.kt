@@ -5,6 +5,7 @@ import ca.uhn.fhir.context.support.IValidationSupport
 import ca.uhn.fhir.rest.api.EncodingEnum
 import ca.uhn.fhir.rest.server.RestfulServer
 import com.amazonaws.services.sqs.AmazonSQS
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.hl7.fhir.utilities.npm.NpmPackage
 import org.springframework.beans.factory.annotation.Qualifier
 import uk.nhs.england.fhirvalidator.configuration.FHIRServerProperties
@@ -20,6 +21,7 @@ import javax.servlet.annotation.WebServlet
 class FHIRR4RestfulServer(
     @Qualifier("R4") fhirContext: FhirContext,
     val sqs : AmazonSQS,
+    val objectMapper: ObjectMapper,
     private val validateR4Provider: ValidateR4Provider,
     private val openAPIProvider: OpenAPIProvider,
     private val markdownProvider: MarkdownProvider,
@@ -61,7 +63,7 @@ class FHIRR4RestfulServer(
 
 
 
-        registerInterceptor(CapabilityStatementInterceptor(this.fhirContext,npmPackages, supportChain, fhirServerProperties))
+        registerInterceptor(CapabilityStatementInterceptor(this.fhirContext, objectMapper, supportChain, fhirServerProperties))
 
 
         val awsAuditEventLoggingInterceptor =
