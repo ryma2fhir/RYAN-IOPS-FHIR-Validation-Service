@@ -59,21 +59,24 @@ class CapabilityStatementInterceptor(
 
 
         for (resourceIG in supportChain.fetchAllConformanceResources()?.filterIsInstance<CapabilityStatement>()!!) {
-            for (restComponent in resourceIG.rest) {
-                for (component in restComponent.resource) {
+            if (!resourceIG.url.contains("sdc")) {
+                for (restComponent in resourceIG.rest) {
+                    for (component in restComponent.resource) {
 
-                    if (component.hasProfile()) {
-                        var resourceComponent = getResourceComponent(component.type, cs)
-                        if (resourceComponent != null) {
-                            resourceComponent.type = component.type
-                            resourceComponent.profile = component.profile
-                        } else {
-                            // add this to CapabilityStatement to indicate profile being valiated against
-                            cs.restFirstRep.resource.add(
-                                CapabilityStatement.CapabilityStatementRestResourceComponent().setType(component.type).setProfile(component.profile)
-                            )
+                        if (component.hasProfile()) {
+                            var resourceComponent = getResourceComponent(component.type, cs)
+                            if (resourceComponent != null) {
+                                resourceComponent.type = component.type
+                                resourceComponent.profile = component.profile
+                            } else {
+                                // add this to CapabilityStatement to indicate profile being valiated against
+                                cs.restFirstRep.resource.add(
+                                    CapabilityStatement.CapabilityStatementRestResourceComponent().setType(component.type)
+                                        .setProfile(component.profile)
+                                )
+                            }
+
                         }
-
                     }
                 }
             }
