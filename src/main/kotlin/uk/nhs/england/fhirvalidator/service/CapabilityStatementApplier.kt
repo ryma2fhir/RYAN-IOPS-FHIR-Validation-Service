@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 class CapabilityStatementApplier(
     val supportChain: ValidationSupportChain
 ) {
-    private val restResources = supportChain.fetchAllConformanceResources()?.filterIsInstance(CapabilityStatement::class.java)?.filterNot { it.url == null || it.url.contains("sdc")}
+    private val restResources = supportChain.fetchAllConformanceResources()?.filterIsInstance(CapabilityStatement::class.java)?.filterNot { it.url == null || it.url.contains("sdc") || it.url.contains("us.core")}
         ?.flatMap { it.rest }
         ?.flatMap { it.resource }
 

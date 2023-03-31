@@ -10,5 +10,10 @@
   {
     "packageName": "hl7.fhir.uv.sdc",
     "version": "3.0.0"
+  },
+  {
+    "packageName": "hl7.fhir.us.core",
+    "version": "3.1.1"
   }
+
 ]

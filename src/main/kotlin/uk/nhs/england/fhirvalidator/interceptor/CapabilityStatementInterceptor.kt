@@ -59,7 +59,7 @@ class CapabilityStatementInterceptor(
 
 
         for (resourceIG in supportChain.fetchAllConformanceResources()?.filterIsInstance<CapabilityStatement>()!!) {
-            if (!resourceIG.url.contains("sdc")) {
+            if (!resourceIG.url.contains("sdc") && !resourceIG.url.contains("us.core")) {
                 for (restComponent in resourceIG.rest) {
                     for (component in restComponent.resource) {
 
