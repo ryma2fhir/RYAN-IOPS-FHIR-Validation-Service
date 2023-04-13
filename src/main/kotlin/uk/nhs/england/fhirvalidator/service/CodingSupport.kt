@@ -233,7 +233,7 @@ class CodingSupport(@Qualifier("R4") private val ctx: FhirContext?,
         return null
     }
 
-    fun expandEcl(ecl: String?, count: IntegerType?): Parameters? {
+    fun expandEcl(ecl: String?, count: IntegerType?, filter: String?): Parameters? {
         val client = provideClient()
 
         if (client != null) {
@@ -243,6 +243,9 @@ class CodingSupport(@Qualifier("R4") private val ctx: FhirContext?,
             ParametersUtil.addParameterToParametersUri(ctx, input, "url", uk.nhs.england.fhirvalidator.util.FhirSystems.SNOMED_CT+"?fhir_vs=ecl/"+ecl)
             if (count != null) {
                 ParametersUtil.addParameterToParametersInteger(ctx, input, "count", count.value)
+            }
+            if (filter != null) {
+                ParametersUtil.addParameterToParametersString(ctx, input, "filter", filter)
             }
             val output: IBaseParameters =
                 client.operation().onType(ValueSet::class.java).named("expand")

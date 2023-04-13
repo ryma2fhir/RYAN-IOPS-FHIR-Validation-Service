@@ -291,6 +291,13 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
                         .description("(EXPERIMENTAL) A text filter that is applied to restrict the codes that are returned (this is useful in a UI context).")
                         .schema(StringSchema())
                         .example("10"))
+                    .addParametersItem(Parameter()
+                        .name("filter")
+                        .`in`("query")
+                        .required(false)
+                        .style(Parameter.StyleEnum.SIMPLE)
+                        .description("(EXPERIMENTAL - ValueSet must be in UKCore or NHSDigital IG) A text filter that is applied to restrict the codes that are returned (this is useful in a UI context).")
+                        .schema(StringSchema()))
 
             )
 

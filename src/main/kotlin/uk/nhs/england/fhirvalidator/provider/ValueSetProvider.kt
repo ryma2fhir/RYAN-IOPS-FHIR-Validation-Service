@@ -132,10 +132,16 @@ class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
     }
 
     @Operation(name = "\$expandEcl", idempotent = true)
-    fun eclExpand (  @OperationParam(name = "ecl", min = 1) filter: String?,
+    fun eclExpand (  @OperationParam(name = "ecl", min = 1) ecl: String?,
+                     @OperationParam(name = "filter") filter: String?,
                      @OperationParam(name = "count") count: IntegerType?
-    ) : Parameters? {
-        return codingSupport.expandEcl(filter,count)
+    ) : ValueSet? {
+
+        var param = codingSupport.expandEcl(ecl,count,filter)
+        if (param !== null) {
+            if (param.parameterFirstRep.hasResource() && param.parameterFirstRep.resource is ValueSet) return param.parameterFirstRep.resource as ValueSet
+         }
+        return null;
     }
 
     @Operation(name = "\$expand", idempotent = true)
