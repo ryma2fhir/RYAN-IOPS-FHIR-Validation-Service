@@ -334,6 +334,14 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
                         .description("(EXPERIMENTAL) A text filter that is applied to restrict the codes that are returned (this is useful in a UI context).")
                         .schema(BooleanSchema())
                         .example("true"))
+                    .addParametersItem(Parameter()
+                        .name("property")
+                        .`in`("query")
+                        .required(false)
+                        .style(Parameter.StyleEnum.SIMPLE)
+                        .description("(EXPERIMENTAL) Properties to return.")
+                        .schema(StringSchema())
+                        .example("sufficientlyDefined,inactive,parent"))
 
             )
 

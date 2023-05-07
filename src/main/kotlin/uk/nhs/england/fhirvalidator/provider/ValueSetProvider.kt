@@ -11,6 +11,7 @@ import ca.uhn.fhir.rest.annotation.*
 import ca.uhn.fhir.rest.api.MethodOutcome
 import ca.uhn.fhir.rest.api.server.RequestDetails
 import ca.uhn.fhir.rest.param.DateParam
+import ca.uhn.fhir.rest.param.StringOrListParam
 import ca.uhn.fhir.rest.param.StringParam
 import ca.uhn.fhir.rest.param.TokenParam
 import ca.uhn.fhir.rest.server.IResourceProvider
@@ -27,6 +28,7 @@ import uk.nhs.england.fhirvalidator.interceptor.CognitoAuthInterceptor
 import uk.nhs.england.fhirvalidator.service.CodingSupport
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 
 @Component
@@ -73,10 +75,24 @@ class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
         return awsValueSet.delete(theId)
     }
     @Search
-    fun search(@RequiredParam(name = ValueSet.SP_URL) url: TokenParam): List<ValueSet> {
+    fun search(@RequiredParam(name = ValueSet.SP_URL) url: TokenParam?): List<ValueSet> {
         val list = mutableListOf<ValueSet>()
+        if (url == null) {
+            val resources = supportChain.fetchAllConformanceResources()
+            if (resources != null) {
+                resources.forEach{
+                    if (it is ValueSet) {
+                        val valueSet = it as ValueSet
+                        if (valueSet.id == null) valueSet.id = UUID.randomUUID().toString()
+                        list.add(valueSet)
+                    }
+                }
+            }
+            return list
+        }
+
         val resource = supportChain.fetchResource(ValueSet::class.java,java.net.URLDecoder.decode(url.value, StandardCharsets.UTF_8.name()))
-        if (resource != null) {list.add(resource)
+        if (resource != null) { list.add(resource)
         } else {
             val resources = awsValueSet.search(url)
             if (resources.size>0) list.addAll(resources)
@@ -126,9 +142,16 @@ class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
     @Operation(name = "\$expandSCT", idempotent = true)
     fun subsumes (  @OperationParam(name = "filter") filter: String?,
                     @OperationParam(name = "count") count: IntegerType?,
-                    @OperationParam(name = "includeDesignations") includeDesignations: BooleanType?
-    ) : Parameters? {
-        return codingSupport.search(filter,count,includeDesignations)
+                    @OperationParam(name = "includeDesignations") includeDesignations: BooleanType?,
+                    @OperationParam(name = "elements") elements: StringOrListParam?,
+                    @OperationParam(name = "property") property: StringOrListParam?
+    ) : ValueSet? {
+
+        var param = codingSupport.search(filter,count,includeDesignations, elements, property)
+        if (param !== null) {
+            if (param.parameterFirstRep.hasResource() && param.parameterFirstRep.resource is ValueSet) return param.parameterFirstRep.resource as ValueSet
+        }
+        return null
     }
 
     @Operation(name = "\$expandEcl", idempotent = true)

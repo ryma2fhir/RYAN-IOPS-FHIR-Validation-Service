@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.support.IValidationSupport
 import ca.uhn.fhir.context.support.ValidationSupportContext
 import ca.uhn.fhir.rest.client.api.IGenericClient
+import ca.uhn.fhir.rest.param.StringOrListParam
 import ca.uhn.fhir.util.ParametersUtil
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -208,7 +209,7 @@ class CodingSupport(@Qualifier("R4") private val ctx: FhirContext?,
         return null
     }
 
-    fun search(filter: String?, count: IntegerType?,includeDesignations: BooleanType?): Parameters? {
+    fun search(filter: String?, count: IntegerType?,includeDesignations: BooleanType?, elements : StringOrListParam?, property: StringOrListParam?): Parameters? {
         val client = provideClient()
 
         if (client != null) {
@@ -221,6 +222,12 @@ class CodingSupport(@Qualifier("R4") private val ctx: FhirContext?,
             ParametersUtil.addParameterToParametersUri(ctx, input, "url", uk.nhs.england.fhirvalidator.util.FhirSystems.SNOMED_CT+"?fhir_vs")
             if (count != null) {
                 ParametersUtil.addParameterToParametersInteger(ctx, input, "count", count.value)
+            }
+            if ((property !== null)) {
+                property.valuesAsQueryTokens.forEach {
+                    System.out.println(it.value)
+                    ParametersUtil.addParameterToParametersString(ctx, input, "property", it.value)
+                }
             }
             val output: IBaseParameters =
                 client.operation().onType(ValueSet::class.java).named("expand")
