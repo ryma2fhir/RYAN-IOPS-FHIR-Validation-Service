@@ -27,6 +27,7 @@ import uk.nhs.england.fhirvalidator.awsProvider.AWSValueSet
 import uk.nhs.england.fhirvalidator.interceptor.CognitoAuthInterceptor
 import uk.nhs.england.fhirvalidator.service.CodingSupport
 import uk.nhs.england.fhirvalidator.service.ImplementationGuideParser
+import uk.nhs.england.fhirvalidator.util.FhirSystems
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
@@ -75,7 +76,7 @@ class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
         return awsValueSet.delete(theId)
     }
     @Search
-    fun search(@RequiredParam(name = ValueSet.SP_URL) url: TokenParam?): List<ValueSet> {
+    fun search(@OptionalParam(name = ValueSet.SP_URL) url: TokenParam?): List<ValueSet> {
         val list = mutableListOf<ValueSet>()
         if (url == null) {
             val resources = supportChain.fetchAllConformanceResources()
@@ -83,8 +84,29 @@ class ValueSetProvider (@Qualifier("R4") private val fhirContext: FhirContext,
                 resources.forEach{
                     if (it is ValueSet) {
                         val valueSet = it as ValueSet
-                        if (valueSet.id == null) valueSet.id = UUID.randomUUID().toString()
-                        list.add(valueSet)
+                        var found=false
+                        list.forEach{
+                            if (it.url === valueSet.url) found = true
+                        }
+                        // Remove US valuesets
+                        if (valueSet.hasJurisdiction() && valueSet.jurisdictionFirstRep.hasCoding()
+                            && valueSet.jurisdictionFirstRep.codingFirstRep.code.equals("US")) found = true
+                        // Only UK. This really should use jurisdiction
+                        if (!valueSet.url.contains(".uk")) found = true
+                        // Only add SNOMED. Will need to review this
+                        var isSnomed = false
+                        if (valueSet.hasCompose() && valueSet.compose.hasInclude()) {
+                            valueSet.compose.include.forEach{
+                                if (it.hasSystem() && it.system.equals(FhirSystems.SNOMED_CT)) isSnomed = true
+                            }
+                        }
+                        // remove expansion
+                        if (!found && isSnomed) {
+                            valueSet.expansion = null
+                            valueSet.text = null
+                            if (valueSet.id == null) valueSet.id = UUID.randomUUID().toString()
+                            list.add(valueSet)
+                        }
                     }
                 }
             }
