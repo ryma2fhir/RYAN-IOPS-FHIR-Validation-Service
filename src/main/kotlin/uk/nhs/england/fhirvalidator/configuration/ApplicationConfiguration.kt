@@ -73,25 +73,30 @@ open class ApplicationConfiguration(
     }
 
     @Bean
-    fun getSQS(): AmazonSQS {
-        var sqs: AmazonSQS = AmazonSQSClientBuilder.defaultClient();
-        logger.info("AWS SQS Queue "+ messageProperties.getAwsQueueName() + " configuration");
-        // Don't connect if not enabled
-        if (!messageProperties.getAWSQueueEnabled()) return sqs;
+    fun getSQS(): AmazonSQS? {
 
-        val create_request : CreateQueueRequest = CreateQueueRequest(messageProperties.getAwsQueueName())
-            .addAttributesEntry("DelaySeconds", "60")
-            .addAttributesEntry("MessageRetentionPeriod", "86400");
+        if (messageProperties.getAWSQueueEnabled()) {
+            var sqs: AmazonSQS = AmazonSQSClientBuilder.defaultClient();
+            logger.info("AWS SQS Queue " + messageProperties.getAwsQueueName() + " configuration");
+            // Don't connect if not enabled
+            if (!messageProperties.getAWSQueueEnabled()) return sqs;
 
-        try {
-            sqs.createQueue(create_request);
-        } catch (e : AmazonSQSException) {
-            if (!e.getErrorCode().equals("QueueAlreadyExists")) {
-                throw e;
+            val create_request: CreateQueueRequest = CreateQueueRequest(messageProperties.getAwsQueueName())
+                .addAttributesEntry("DelaySeconds", "60")
+                .addAttributesEntry("MessageRetentionPeriod", "86400");
+
+            try {
+                sqs.createQueue(create_request);
+            } catch (e: AmazonSQSException) {
+                if (!e.getErrorCode().equals("QueueAlreadyExists")) {
+                    throw e;
+                }
+                logger.info("AWS SQS Queue " + messageProperties.getAwsQueueName() + " already exists");
             }
-            logger.info("AWS SQS Queue "+ messageProperties.getAwsQueueName() + " already exists");
+            return sqs;
+        } else {
+            return null
         }
-        return sqs;
     }
 
 

@@ -7,6 +7,7 @@ import ca.uhn.fhir.rest.server.RestfulServer
 import com.amazonaws.services.sqs.AmazonSQS
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hl7.fhir.utilities.npm.NpmPackage
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import uk.nhs.england.fhirvalidator.configuration.FHIRServerProperties
 import uk.nhs.england.fhirvalidator.configuration.MessageProperties
@@ -20,7 +21,7 @@ import javax.servlet.annotation.WebServlet
 @WebServlet("/FHIR/R4/*", loadOnStartup = 1)
 class FHIRR4RestfulServer(
     @Qualifier("R4") fhirContext: FhirContext,
-    val sqs : AmazonSQS,
+    @Autowired(required = false) val sqs : AmazonSQS?,
     val objectMapper: ObjectMapper,
     private val validateR4Provider: ValidateR4Provider,
     private val openAPIProvider: OpenAPIProvider,

@@ -17,7 +17,6 @@ import org.hl7.fhir.r4.model.*
 import org.slf4j.LoggerFactory
 import uk.nhs.england.fhirvalidator.configuration.FHIRServerProperties
 import uk.nhs.england.fhirvalidator.configuration.MessageProperties
-import uk.nhs.england.fhirvalidator.util.FhirSystems
 import java.io.IOException
 import java.util.*
 import javax.servlet.ServletException
@@ -29,7 +28,7 @@ class AWSAuditEventLoggingInterceptor(
     private val ctx: FhirContext,
     private val fhirServerProperties: FHIRServerProperties,
     private val messageProperties: MessageProperties,
-    private val sqs: AmazonSQS
+    private val sqs: AmazonSQS?
 )
  {
 
