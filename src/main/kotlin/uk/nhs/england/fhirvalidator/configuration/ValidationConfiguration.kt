@@ -78,9 +78,9 @@ open class ValidationConfiguration(
             DefaultProfileValidationSupport(fhirContext),
             SnapshotGeneratingValidationSupport(fhirContext),
             CommonCodeSystemsTerminologyService(fhirContext),
-            switchedTerminologyServiceValidationSupport,
-            AWSValidationSupport(fhirContext, awsQuestionnaire,awsCodeSystem,awsValueSet, awsConceptMap)
+            switchedTerminologyServiceValidationSupport
         )
+        if (messageProperties.getAWSValidationSupport()) supportChain.addValidationSupport( AWSValidationSupport(fhirContext, awsQuestionnaire,awsCodeSystem,awsValueSet, awsConceptMap))
         getPackages()
         if (npmPackages != null) {
             npmPackages!!
