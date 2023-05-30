@@ -8,6 +8,7 @@ import ca.uhn.fhir.rest.api.Constants
 import ca.uhn.fhir.rest.api.EncodingEnum
 import ca.uhn.fhir.rest.api.server.RequestDetails
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException
+import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException
 import ca.uhn.fhir.rest.server.servlet.ServletRequestDetails
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.SendMessageRequest
@@ -59,25 +60,33 @@ class AWSAuditEventLoggingInterceptor(
             contentType = contentType.trim { it <= ' ' }
             val encoding = EncodingEnum.forContentType(contentType)
             if (encoding != null) {
-                val requestContents = theRequestDetails.loadRequestContents()
-                fhirResource = String(requestContents, Constants.CHARSET_UTF8)
-                if (!fhirResource.isEmpty()) {
-                    try {
-                        var baseResource : IBaseResource? = null
+                try {
+
+                    val requestContents = theRequestDetails.loadRequestContents()
+                    fhirResource = String(requestContents, Constants.CHARSET_UTF8)
+                    if (!fhirResource.isEmpty()) {
                         try {
-                            baseResource = ctx.newJsonParser().parseResource(fhirResource)
-                        } catch (ex : Exception) {
-                            baseResource = ctx.newXmlParser().parseResource(fhirResource)
+                            var baseResource: IBaseResource? = null
+                            try {
+                                baseResource = ctx.newJsonParser().parseResource(fhirResource)
+                            } catch (ex: Exception) {
+                                baseResource = ctx.newXmlParser().parseResource(fhirResource)
+                            }
+                            if (baseResource is QuestionnaireResponse) {
+                                patientId = baseResource.subject.reference
+                            }
+                        } catch (ex: Exception) {
+                            val auditEvent =
+                                createAudit(theRequestDetails.servletRequest, fhirResourceName, patientId, fhirResource)
+                            addAWSOutComeException(auditEvent, ex)
+                            // throw UnprocessableEntityException(ex.message)
                         }
-                        if (baseResource is QuestionnaireResponse) {
-                            patientId = baseResource.subject.reference
-                        }
-                    }  catch(ex: Exception) {
-                    val auditEvent =
-                        createAudit(theRequestDetails.servletRequest, fhirResourceName, patientId, fhirResource)
-                    addAWSOutComeException(auditEvent, ex)
-                    // throw UnprocessableEntityException(ex.message)
                     }
+                } catch (io: InvalidRequestException) {
+                    System.out.println("Issue Processing - " + theRequestDetails.requestPath)
+                }
+                catch (io: IOException) {
+                    System.out.println("Issue Processing - " + theRequestDetails.requestPath)
                 }
             }
         }
