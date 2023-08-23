@@ -1,11 +1,11 @@
 [
   {
     "packageName": "fhir.r4.ukcore.stu3.currentbuild",
-    "version": "0.0.5-sprint-6-review"
+    "version": "0.0.6-pre-release"
   },
   {
     "packageName": "uk.nhsdigital.r4.test",
-    "version": "2.8.8-prerelease"
+    "version": "2.8.15-prerelease"
   },
   {
     "packageName": "hl7.fhir.uv.sdc",
