@@ -33,7 +33,6 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
     var CONFORMANCE = "FHIR Package Queries"
 
     val SVCM_98 = "Lookup Code"
-    var MEDICATION_DEFINITION = "Experimental - FHIR R4B Medication Definition"
     var EXPERIMENTAL = "Experimental"
     var TERMINOLOGY = "Terminology"
 
@@ -513,80 +512,7 @@ open class OpenApiConfig(@Qualifier("R4") val ctx : FhirContext) {
 
 
 
-        // MEDICATION DEFINITION
-
-        val medicineItem = PathItem()
-            .get(
-                Operation()
-                    .addTagsItem(MEDICATION_DEFINITION)
-                    .summary("EXPERIMENTAL A medicinal product, being a substance or combination of substances that is intended to treat, prevent or diagnose a disease, or to restore, correct or modify physiological functions by exerting a pharmacological, immunological or metabolic action.")
-                    .description("[Medication Definition Module](https://www.hl7.org/fhir/medication-definition-module.html)")
-                    .responses(getApiResponses())
-                    .addParametersItem(Parameter()
-                        .name("name")
-                        .`in`("query")
-                        .required(false)
-                        .style(Parameter.StyleEnum.SIMPLE)
-                        .description("The full product name")
-                        .schema(StringSchema())
-                        .example("Methotrexate 5mg"))
-            )
-        oas.path("/FHIR/R4B/MedicinalProductDefinition",medicineItem)
-
-        val medicineReadItem = PathItem()
-            .get(
-                Operation()
-                    .addTagsItem(MEDICATION_DEFINITION)
-                    .summary("EXPERIMENTAL A medicinal product, being a substance or combination of substances that is intended to treat, prevent or diagnose a disease, or to restore, correct or modify physiological functions by exerting a pharmacological, immunological or metabolic action.")
-                    .description("[Medication Definition Module](https://www.hl7.org/fhir/medication-definition-module.html)")
-                    .responses(getApiResponses())
-                    .addParametersItem(Parameter()
-                        .name("id")
-                        .`in`("path")
-                        .required(false)
-                        .style(Parameter.StyleEnum.SIMPLE)
-                        .description("The product dm+d/SNOMED CT code")
-                        .schema(StringSchema())
-                        .example("39720311000001101"))
-            )
-        oas.path("/FHIR/R4B/MedicinalProductDefinition/{id}",medicineReadItem)
-
-        val medicinePackItem = PathItem()
-            .get(
-                Operation()
-                    .addTagsItem(MEDICATION_DEFINITION)
-                    .summary("A medically related item or items, in a container or package..")
-                    .description("[Medication Definition Module](https://www.hl7.org/fhir/medication-definition-module.html)")
-                    .responses(getApiResponses())
-                    .addParametersItem(Parameter()
-                        .name("name")
-                        .`in`("query")
-                        .required(false)
-                        .style(Parameter.StyleEnum.SIMPLE)
-                        .description("A name for this package.")
-                        .schema(StringSchema())
-                        .example("Methotrexate 5mg"))
-            )
-        oas.path("/FHIR/R4B/PackagedProductDefinition",medicinePackItem)
-
-        val medicinePackReadItem = PathItem()
-            .get(
-                Operation()
-                    .addTagsItem(MEDICATION_DEFINITION)
-                    .summary("EXPERIMENTAL A medically related item or items, in a container or package..")
-                    .description("[Medication Definition Module](https://www.hl7.org/fhir/medication-definition-module.html)")
-                    .responses(getApiResponses())
-                    .addParametersItem(Parameter()
-                        .name("id")
-                        .`in`("path")
-                        .required(false)
-                        .style(Parameter.StyleEnum.SIMPLE)
-                        .description("The product pack dm+d/SNOMED CT code")
-                        .schema(StringSchema())
-                        .example("1029811000001106"))
-            )
-        oas.path("/FHIR/R4B/PackagedProductDefinition/{id}",medicinePackReadItem)
-
+        
         // Hidden
 
         oas.path("/FHIR/R4/metadata",PathItem()
