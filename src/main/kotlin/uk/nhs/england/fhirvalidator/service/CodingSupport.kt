@@ -10,8 +10,6 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.hl7.fhir.instance.model.api.IBaseParameters
 import org.hl7.fhir.r4.model.*
-import org.hl7.fhir.r4b.model.CodeableConcept
-import org.hl7.fhir.r4b.model.Coding
 import org.hl7.fhir.utilities.npm.NpmPackage
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager

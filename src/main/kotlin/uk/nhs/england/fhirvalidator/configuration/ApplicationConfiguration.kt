@@ -32,20 +32,6 @@ open class ApplicationConfiguration(
         return fhirContext
     }
 
-    @Bean("R4B")
-    open fun fhirR4BContext(): FhirContext {
-        val fhirContext = FhirContext.forR4BCached()
-        fhirContext.setParserErrorHandler(StrictErrorHandler())
-        return fhirContext
-    }
-
-    @Bean("STU3")
-    open fun fhirSTU3Context(): FhirContext {
-        val fhirContext = FhirContext.forDstu3()
-        fhirContext.setParserErrorHandler(StrictErrorHandler())
-        return fhirContext
-    }
-
     @Bean
     open fun restTemplate(): RestTemplate {
         return RestTemplate()
