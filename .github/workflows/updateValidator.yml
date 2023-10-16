@@ -2,6 +2,12 @@ name: IOPS-FHIR-Validation-Terminology
 
 # Controls when the workflow will run
 on:
+  workflow_dispatch:
+    inputs:
+      HAPIversion:
+        default: ""
+  # Triggers the workflow on push or pull request events but only for the master branch
+  # Allows you to run this workflow manually from the Actions tab
   # Triggers the workflow on push or pull request events but only for the master branch
   # Allows you to run this workflow manually from the Actions tab
 
