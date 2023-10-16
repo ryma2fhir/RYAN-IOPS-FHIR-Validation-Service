@@ -30,16 +30,15 @@ jobs:
         run: |
           echo -e "cd /*[local-name()='project']/*[local-name()='properties']/*[local-name()='fhir.version']\nset ${{ github.event.inputs.HAPIversion }}\nsave" | xmllint --shell pom.xml
           echo -e "cd /*[local-name()='project']/*[local-name()='version']\nset ${{ github.event.inputs.HAPIversion }}\nsave" | xmllint --shell pom.xml
-      - name: Check POM
-        run: xmllint --xpath "//*[local-name()='project']/*[local-name()='properties']/*[local-name()='fhir.version']/text()" pom.xml
-      # - name: Build FHIR Validator
-        # run: mvn clean install
+
+      - name: Build FHIR Validator
+        run: mvn clean install
       
-      # - name: Build docker image
-        # run: docker build -t fhir-validator-r4 .
+      - name: Build docker image
+        run: docker build -t fhir-validator-r4 .
       
-      # - name: Send docker image to AWS
-        # run: |
-          # docker tag fhir-validator-r4:latest ${{ secrets.AWS_SERVER }}:$(xmllint --xpath "//*[local-name()='project']/*[local-name()='properties']/*[local-name()='fhir.version']/text()" pom.xml)
-          # docker tag fhir-validator-r4:latest ${{ secrets.AWS_SERVER }}:latest
+      - name: Send docker image to AWS
+        run: |
+          docker tag fhir-validator-r4:latest ${{ secrets.AWS_SERVER }}:${{ github.event.inputs.HAPIversion }}
+          docker tag fhir-validator-r4:latest ${{ secrets.AWS_SERVER }}:latest
 
