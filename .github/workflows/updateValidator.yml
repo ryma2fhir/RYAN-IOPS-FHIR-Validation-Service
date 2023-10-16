@@ -25,7 +25,7 @@ jobs:
         with:
           submodules: true
       - name: install xmllint
-        run: apt-get update && apt-get install libxml2-utils
+        run: sudo apt-get update && sudo apt-get install libxml2-utils
       - name: Update POM
         run: |
           echo -e "cd /*[local-name()='project']/*[local-name()='properties']/*[local-name()='fhir.version']\nset ${{ github.event.inputs.HAPIversion }}\nsave" | xmllint --shell pom.xml
