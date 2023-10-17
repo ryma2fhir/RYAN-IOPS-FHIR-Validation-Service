@@ -54,11 +54,11 @@ class MessageDefinitionApplier(
         if (messageDefinitionProfile != null) {
             return messageDefinitions
                 ?.filter { it.eventCoding.system == messageType.system }
-                ?.firstOrNull { it.eventCoding.code == messageType.code &&  it.url == messageDefinitionProfile }
+                ?.lastOrNull { it.eventCoding.code == messageType.code &&  it.url == messageDefinitionProfile }
         } else {
             return messageDefinitions
                 ?.filter { it.eventCoding.system == messageType.system }
-                ?.firstOrNull { it.eventCoding.code == messageType.code }
+                ?.lastOrNull { it.eventCoding.code == messageType.code }
         }
     }
 
