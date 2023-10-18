@@ -6,7 +6,8 @@ import org.hl7.fhir.r4.model.Bundle
 
 fun getResourcesOfType(resource: IBaseResource, resourceType: String?): List<IBaseResource> {
     val matchingResources = mutableListOf<IBaseResource>()
-    if (resource.fhirType() == resourceType) {
+    // KGM exclude bundles from resource checks
+    if (resource.fhirType() == resourceType && !(resource is Bundle)) {
         matchingResources.add(resource)
     }
     if (resource is Bundle) {
