@@ -1,0 +1,54 @@
+name: IOPS-FHIR-Validation-Terminology
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  # Allows you to run this workflow manually from the Actions tab
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Update POM
+        run: |
+          echo -e "cd /*[local-name()='project']/*[local-name()='properties']/*[local-name()='fhir.version']\nset ${{ github.event.inputs.HAPIversion }}\nsave" | xmllint --shell pom.xml
+          echo -e "cd /*[local-name()='project']/*[local-name()='version']\nset ${{ github.event.inputs.HAPIversion }}\nsave" | xmllint --shell pom.xml
+      #- name: Check POM
+       # run: xmllint --xpath "//*[local-name()='project']/*[local-name()='properties']/*[local-name()='fhir.version']/text()" pom.xml
+        
+        ########################BELOW TO BE TESTED#####################################
+      # - name: Build FHIR Validator
+        # run: mvn clean install
+      
+      # - name: Build docker image
+        # run: docker build -t fhir-validator-r4 .
+      
+      # - name: Tag docker image
+        # run: |
+          # docker tag fhir-validator-r4:latest ${{ secrets.AWS_SERVER }}:${{ github.event.inputs.HAPIversion }}
+          # docker tag fhir-validator-r4:latest ${{ secrets.AWS_SERVER }}:latest
+        
+       #- name: Configure AWS credentials from Production account
+        # uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+        #   role-to-assume: arn:aws:iam::222222222222:role/my-github-actions-role-prod <- needs adding?
+        #   aws-region: eu-west-2
+       
+    #- name: Copy files to the production website with the AWS CLI
+      #   run: |
+          # docker push ${{ secrets.AWS_SERVER }}/fhir-validator-r4:latest
+          # docker push ${{ secrets.AWS_SERVER }}/fhir-validator-r4:${{ github.event.inputs.HAPIversion }}
+
+          
+        https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
+
