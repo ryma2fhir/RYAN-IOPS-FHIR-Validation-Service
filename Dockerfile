@@ -1,4 +1,4 @@
-FROM eclipse-temurin:18.0.2
+FROM openjdk:11.0.8
 
 VOLUME /tmp
 
